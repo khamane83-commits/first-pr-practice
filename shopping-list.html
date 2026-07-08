@@ -296,6 +296,7 @@
     <p class="empty" id="draftIngEmpty">材料がまだ追加されていません。</p>
     <div class="footer-actions" style="margin-top: 10px;">
       <button class="btn-accent" id="registerDishBtn">この献立を登録する</button>
+      <button class="btn-link" id="cancelEditBtn" style="display: none;">編集をキャンセル</button>
     </div>
     <div class="chip-list" id="customDishList" style="margin-top: 12px;"></div>
     <p class="empty" id="customDishEmpty">登録済みのオリジナル献立はありません。</p>
@@ -532,10 +533,12 @@
   const draftIngList = document.getElementById("draftIngList");
   const draftIngEmpty = document.getElementById("draftIngEmpty");
   const registerDishBtn = document.getElementById("registerDishBtn");
+  const cancelEditBtn = document.getElementById("cancelEditBtn");
   const customDishList = document.getElementById("customDishList");
   const customDishEmpty = document.getElementById("customDishEmpty");
 
   let draftIngredients = [];
+  let editingRecipeName = null;
 
   const ingredientBody = document.getElementById("ingredientBody");
   const ingredientEmpty = document.getElementById("ingredientEmpty");
@@ -766,23 +769,50 @@
       alert("材料を1つ以上追加してください。");
       return;
     }
-    if (getRecipe(name) && !confirm(`「${name}」は既に登録されています。上書きしますか？`)) {
+    const isRename = editingRecipeName && editingRecipeName !== name;
+    if ((!editingRecipeName || isRename) && getRecipe(name) && !confirm(`「${name}」は既に登録されています。上書きしますか？`)) {
       return;
     }
     const baseServings = parseInt(newDishServingsInput.value, 10) || 2;
+    if (isRename) {
+      delete state.customRecipes[editingRecipeName];
+      state.dishes = [...new Set(state.dishes.map((d) => (d === editingRecipeName ? name : d)))];
+    }
     state.customRecipes[name] = { baseServings, ingredients: draftIngredients.map((i) => ({ ...i })) };
+    cancelEdit();
+    saveState();
+    renderDishSelect();
+    renderCustomDishes();
+    renderAll();
+  }
+
+  function startEditRecipe(name) {
+    const recipe = state.customRecipes[name];
+    if (!recipe) return;
+    editingRecipeName = name;
+    newDishNameInput.value = name;
+    newDishServingsInput.value = recipe.baseServings;
+    draftIngredients = recipe.ingredients.map((i) => ({ ...i }));
+    renderDraftIngredients();
+    registerDishBtn.textContent = "この献立を更新する";
+    cancelEditBtn.style.display = "inline-block";
+    newDishNameInput.focus();
+  }
+
+  function cancelEdit() {
+    editingRecipeName = null;
     draftIngredients = [];
     newDishNameInput.value = "";
     newDishServingsInput.value = 2;
-    saveState();
+    registerDishBtn.textContent = "この献立を登録する";
+    cancelEditBtn.style.display = "none";
     renderDraftIngredients();
-    renderDishSelect();
-    renderCustomDishes();
   }
 
   function removeCustomRecipe(name) {
     delete state.customRecipes[name];
     state.dishes = state.dishes.filter((d) => d !== name);
+    if (editingRecipeName === name) cancelEdit();
     saveState();
     renderDishSelect();
     renderCustomDishes();
@@ -798,11 +828,17 @@
       chip.className = "chip";
       const label = document.createElement("span");
       label.textContent = `${name}（${state.customRecipes[name].baseServings}人前）`;
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "編集";
+      editBtn.style.fontSize = "0.75rem";
+      editBtn.title = `${name}を編集`;
+      editBtn.addEventListener("click", () => startEditRecipe(name));
       const removeBtn = document.createElement("button");
       removeBtn.textContent = "×";
       removeBtn.title = `${name}を削除`;
       removeBtn.addEventListener("click", () => removeCustomRecipe(name));
       chip.appendChild(label);
+      chip.appendChild(editBtn);
       chip.appendChild(removeBtn);
       customDishList.appendChild(chip);
     });
@@ -936,6 +972,7 @@
     if (e.key === "Enter") addDraftIngredient();
   });
   registerDishBtn.addEventListener("click", registerDish);
+  cancelEditBtn.addEventListener("click", cancelEdit);
 
   addCustomBtn.addEventListener("click", addCustomIngredient);
   customNameInput.addEventListener("keydown", (e) => {
@@ -956,7 +993,7 @@
   resetAllBtn.addEventListener("click", () => {
     if (confirm("献立・材料・買い出しリストのデータをすべて削除します。よろしいですか？")) {
       state = defaultState();
-      draftIngredients = [];
+      cancelEdit();
       saveState();
       renderDishSelect();
       renderDraftIngredients();
