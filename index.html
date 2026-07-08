@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>旅費わりかん</title>
+<style>
+  :root {
+    --bg: #f4f6f8;
+    --card-bg: #ffffff;
+    --primary: #2f7d5e;
+    --primary-dark: #235f47;
+    --accent: #e0693b;
+    --text: #1f2933;
+    --text-muted: #6b7785;
+    --border: #e2e6ea;
+    --danger: #d64545;
+    --shadow: 0 2px 8px rgba(31, 41, 51, 0.08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding-bottom: 40px;
+  }
+  header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 28px 20px 24px;
+    text-align: center;
+  }
+  header h1 {
+    margin: 0 0 4px;
+    font-size: 1.5rem;
+  }
+  header p {
+    margin: 0;
+    font-size: 0.85rem;
+    opacity: 0.85;
+  }
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+  .card {
+    background: var(--card-bg);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 18px 18px 20px;
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    font-size: 1.05rem;
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card h2 .badge {
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  input[type="text"], input[type="number"], select {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: #fbfcfd;
+    min-width: 0;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+  }
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 10px 16px;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+  }
+  button:active { transform: scale(0.97); }
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    white-space: nowrap;
+  }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--danger);
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+  .btn-ghost:hover { opacity: 0.7; }
+  .chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #eef4f1;
+    color: var(--primary-dark);
+    padding: 6px 8px 6px 12px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+  }
+  .chip button {
+    background: none;
+    color: var(--text-muted);
+    padding: 0 4px;
+    font-size: 1rem;
+    line-height: 1;
+  }
+  .empty {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding: 8px 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.78rem;
+  }
+  td.num, th.num { text-align: right; }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 4px 12px;
+    align-items: center;
+    font-size: 0.92rem;
+  }
+  .summary-grid .head {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .balance-plus { color: var(--primary-dark); font-weight: 700; }
+  .balance-minus { color: var(--danger); font-weight: 700; }
+  .balance-zero { color: var(--text-muted); }
+  .transfer-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .transfer-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff7f2;
+    border: 1px solid #f3ddd0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.92rem;
+  }
+  .transfer-item .arrow {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .transfer-item .amount {
+    margin-left: auto;
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 1rem;
+  }
+  .total-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    padding-top: 10px;
+    margin-top: 6px;
+    border-top: 1px dashed var(--border);
+  }
+  .total-line strong { font-size: 1.1rem; }
+  .footer-actions {
+    text-align: right;
+  }
+  .footer-actions button {
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 400;
+    text-decoration: underline;
+    font-size: 0.8rem;
+    padding: 4px;
+  }
+  @media (max-width: 420px) {
+    .summary-grid { font-size: 0.85rem; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>旅費わりかん</h1>
+  <p>旅行の支払いを記録して、均等割りで精算しよう</p>
+</header>
+
+<main>
+  <section class="card">
+    <h2><span class="badge">1</span>参加者</h2>
+    <div class="row">
+      <input type="text" id="memberInput" placeholder="名前を入力（例：たろう）" maxlength="20">
+      <button class="btn-primary" id="addMemberBtn">追加</button>
+    </div>
+    <div class="chip-list" id="memberList"></div>
+    <p class="empty" id="memberEmpty">まだ参加者がいません。名前を入力して追加してください。</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="badge">2</span>支払いを記録</h2>
+    <div class="row">
+      <select id="payerSelect"></select>
+      <input type="number" id="amountInput" placeholder="金額（円）" min="0" step="1">
+    </div>
+    <div class="row">
+      <input type="text" id="memoInput" placeholder="内容（例：宿泊費）任意" maxlength="30">
+      <button class="btn-primary" id="addExpenseBtn">記録する</button>
+    </div>
+    <table id="expenseTable">
+      <thead>
+        <tr><th>支払者</th><th>内容</th><th class="num">金額</th><th></th></tr>
+      </thead>
+      <tbody id="expenseBody"></tbody>
+    </table>
+    <p class="empty" id="expenseEmpty">まだ支払いが記録されていません。</p>
+    <div class="total-line">
+      <span>合計金額</span>
+      <strong id="totalAmount">0円</strong>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="badge">3</span>精算サマリー</h2>
+    <div class="summary-grid" id="summaryGrid"></div>
+    <p class="empty" id="summaryEmpty">参加者と支払いを入力すると、ここに一人あたりの精算額が表示されます。</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="badge">4</span>誰が誰にいくら払うか</h2>
+    <ul class="transfer-list" id="transferList"></ul>
+    <p class="empty" id="transferEmpty">精算の必要がある場合、ここに最小限の送金リストが表示されます。</p>
+  </section>
+
+  <div class="footer-actions">
+    <button id="resetBtn">すべてのデータをリセット</button>
+  </div>
+</main>
+
+<script>
+(function () {
+  const STORAGE_KEY = "travel-warikan-state-v1";
+
+  /** @type {{members: string[], expenses: {id: number, payer: string, amount: number, memo: string}[]}} */
+  let state = loadState();
+
+  const memberInput = document.getElementById("memberInput");
+  const addMemberBtn = document.getElementById("addMemberBtn");
+  const memberList = document.getElementById("memberList");
+  const memberEmpty = document.getElementById("memberEmpty");
+
+  const payerSelect = document.getElementById("payerSelect");
+  const amountInput = document.getElementById("amountInput");
+  const memoInput = document.getElementById("memoInput");
+  const addExpenseBtn = document.getElementById("addExpenseBtn");
+  const expenseBody = document.getElementById("expenseBody");
+  const expenseEmpty = document.getElementById("expenseEmpty");
+  const totalAmount = document.getElementById("totalAmount");
+
+  const summaryGrid = document.getElementById("summaryGrid");
+  const summaryEmpty = document.getElementById("summaryEmpty");
+
+  const transferList = document.getElementById("transferList");
+  const transferEmpty = document.getElementById("transferEmpty");
+
+  const resetBtn = document.getElementById("resetBtn");
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { members: [], expenses: [] };
+      const parsed = JSON.parse(raw);
+      return {
+        members: Array.isArray(parsed.members) ? parsed.members : [],
+        expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
+      };
+    } catch (e) {
+      return { members: [], expenses: [] };
+    }
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function formatYen(n) {
+    return Math.round(n).toLocaleString("ja-JP") + "円";
+  }
+
+  function addMember() {
+    const name = memberInput.value.trim();
+    if (!name) return;
+    if (state.members.includes(name)) {
+      alert("同じ名前の参加者がすでにいます。");
+      return;
+    }
+    state.members.push(name);
+    memberInput.value = "";
+    saveState();
+    renderAll();
+    memberInput.focus();
+  }
+
+  function removeMember(name) {
+    const usedInExpense = state.expenses.some((e) => e.payer === name);
+    if (usedInExpense && !confirm(`「${name}」さんの支払い記録も削除されます。よろしいですか？`)) {
+      return;
+    }
+    state.members = state.members.filter((m) => m !== name);
+    state.expenses = state.expenses.filter((e) => e.payer !== name);
+    saveState();
+    renderAll();
+  }
+
+  function addExpense() {
+    const payer = payerSelect.value;
+    const amount = parseFloat(amountInput.value);
+    const memo = memoInput.value.trim();
+
+    if (!payer) {
+      alert("先に参加者を追加してください。");
+      return;
+    }
+    if (!amount || amount <= 0) {
+      alert("正しい金額を入力してください。");
+      return;
+    }
+
+    state.expenses.push({
+      id: Date.now(),
+      payer,
+      amount,
+      memo: memo || "（内容なし）",
+    });
+
+    amountInput.value = "";
+    memoInput.value = "";
+    saveState();
+    renderAll();
+    amountInput.focus();
+  }
+
+  function removeExpense(id) {
+    state.expenses = state.expenses.filter((e) => e.id !== id);
+    saveState();
+    renderAll();
+  }
+
+  function computeBalances() {
+    const totalsPaid = {};
+    state.members.forEach((m) => (totalsPaid[m] = 0));
+    state.expenses.forEach((e) => {
+      if (totalsPaid[e.payer] === undefined) totalsPaid[e.payer] = 0;
+      totalsPaid[e.payer] += e.amount;
+    });
+
+    const total = state.expenses.reduce((sum, e) => sum + e.amount, 0);
+    const n = state.members.length;
+    const share = n > 0 ? total / n : 0;
+
+    const balances = state.members.map((m) => ({
+      name: m,
+      paid: totalsPaid[m] || 0,
+      share,
+      balance: (totalsPaid[m] || 0) - share,
+    }));
+
+    return { total, share, balances };
+  }
+
+  function computeTransfers(balances) {
+    const creditors = balances
+      .filter((b) => b.balance > 0.5)
+      .map((b) => ({ name: b.name, amount: b.balance }))
+      .sort((a, b) => b.amount - a.amount);
+    const debtors = balances
+      .filter((b) => b.balance < -0.5)
+      .map((b) => ({ name: b.name, amount: -b.balance }))
+      .sort((a, b) => b.amount - a.amount);
+
+    const transfers = [];
+    let i = 0, j = 0;
+    while (i < debtors.length && j < creditors.length) {
+      const debtor = debtors[i];
+      const creditor = creditors[j];
+      const amount = Math.min(debtor.amount, creditor.amount);
+
+      if (amount > 0.5) {
+        transfers.push({ from: debtor.name, to: creditor.name, amount });
+      }
+
+      debtor.amount -= amount;
+      creditor.amount -= amount;
+
+      if (debtor.amount <= 0.5) i++;
+      if (creditor.amount <= 0.5) j++;
+    }
+    return transfers;
+  }
+
+  function renderMembers() {
+    memberList.innerHTML = "";
+    memberEmpty.style.display = state.members.length === 0 ? "block" : "none";
+    state.members.forEach((name) => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      const label = document.createElement("span");
+      label.textContent = name;
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "×";
+      removeBtn.title = `${name}さんを削除`;
+      removeBtn.addEventListener("click", () => removeMember(name));
+      chip.appendChild(label);
+      chip.appendChild(removeBtn);
+      memberList.appendChild(chip);
+    });
+
+    payerSelect.innerHTML = "";
+    if (state.members.length === 0) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "参加者を先に追加";
+      payerSelect.appendChild(opt);
+    } else {
+      state.members.forEach((name) => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        payerSelect.appendChild(opt);
+      });
+    }
+  }
+
+  function renderExpenses() {
+    expenseBody.innerHTML = "";
+    expenseEmpty.style.display = state.expenses.length === 0 ? "block" : "none";
+
+    state.expenses.forEach((e) => {
+      const tr = document.createElement("tr");
+
+      const payerTd = document.createElement("td");
+      payerTd.textContent = e.payer;
+
+      const memoTd = document.createElement("td");
+      memoTd.textContent = e.memo;
+
+      const amountTd = document.createElement("td");
+      amountTd.className = "num";
+      amountTd.textContent = formatYen(e.amount);
+
+      const actionTd = document.createElement("td");
+      const delBtn = document.createElement("button");
+      delBtn.className = "btn-ghost";
+      delBtn.textContent = "削除";
+      delBtn.addEventListener("click", () => removeExpense(e.id));
+      actionTd.appendChild(delBtn);
+
+      tr.appendChild(payerTd);
+      tr.appendChild(memoTd);
+      tr.appendChild(amountTd);
+      tr.appendChild(actionTd);
+      expenseBody.appendChild(tr);
+    });
+
+    const total = state.expenses.reduce((sum, e) => sum + e.amount, 0);
+    totalAmount.textContent = formatYen(total);
+  }
+
+  function renderSummary(balances) {
+    summaryGrid.innerHTML = "";
+    const hasData = state.members.length > 0 && state.expenses.length > 0;
+    summaryEmpty.style.display = hasData ? "none" : "block";
+    if (!hasData) return;
+
+    const headName = document.createElement("div");
+    headName.className = "head";
+    headName.textContent = "名前";
+    const headPaid = document.createElement("div");
+    headPaid.className = "head";
+    headPaid.textContent = "支払額";
+    const headBalance = document.createElement("div");
+    headBalance.className = "head";
+    headBalance.textContent = "差額";
+    summaryGrid.appendChild(headName);
+    summaryGrid.appendChild(headPaid);
+    summaryGrid.appendChild(headBalance);
+
+    balances.forEach((b) => {
+      const nameDiv = document.createElement("div");
+      nameDiv.textContent = b.name;
+
+      const paidDiv = document.createElement("div");
+      paidDiv.textContent = formatYen(b.paid);
+
+      const balDiv = document.createElement("div");
+      if (b.balance > 0.5) {
+        balDiv.className = "balance-plus";
+        balDiv.textContent = "+" + formatYen(b.balance) + "戻る";
+      } else if (b.balance < -0.5) {
+        balDiv.className = "balance-minus";
+        balDiv.textContent = "-" + formatYen(-b.balance) + "払う";
+      } else {
+        balDiv.className = "balance-zero";
+        balDiv.textContent = "±0円";
+      }
+
+      summaryGrid.appendChild(nameDiv);
+      summaryGrid.appendChild(paidDiv);
+      summaryGrid.appendChild(balDiv);
+    });
+  }
+
+  function renderTransfers(transfers) {
+    transferList.innerHTML = "";
+    const hasData = state.members.length > 0 && state.expenses.length > 0;
+
+    if (!hasData) {
+      transferEmpty.style.display = "block";
+      transferEmpty.textContent = "参加者と支払いを入力すると、ここに最小限の送金リストが表示されます。";
+      return;
+    }
+
+    if (transfers.length === 0) {
+      transferEmpty.style.display = "block";
+      transferEmpty.textContent = "全員の支払いが釣り合っています。精算の必要はありません！";
+      return;
+    }
+
+    transferEmpty.style.display = "none";
+    transfers.forEach((t) => {
+      const li = document.createElement("li");
+      li.className = "transfer-item";
+      li.innerHTML =
+        `<span>${escapeHtml(t.from)}</span>` +
+        `<span class="arrow">→</span>` +
+        `<span>${escapeHtml(t.to)}</span>` +
+        `<span class="amount">${formatYen(t.amount)}</span>`;
+      transferList.appendChild(li);
+    });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function renderAll() {
+    renderMembers();
+    renderExpenses();
+    const { balances } = computeBalances();
+    renderSummary(balances);
+    const transfers = computeTransfers(balances);
+    renderTransfers(transfers);
+  }
+
+  addMemberBtn.addEventListener("click", addMember);
+  memberInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addMember();
+  });
+
+  addExpenseBtn.addEventListener("click", addExpense);
+  amountInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addExpense();
+  });
+  memoInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addExpense();
+  });
+
+  resetBtn.addEventListener("click", () => {
+    if (confirm("参加者と支払いのデータをすべて削除します。よろしいですか？")) {
+      state = { members: [], expenses: [] };
+      saveState();
+      renderAll();
+    }
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
