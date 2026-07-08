@@ -275,13 +275,18 @@
       <select id="dishSelect"></select>
       <button class="btn-primary" id="addDishBtn">追加</button>
     </div>
+    <div class="footer-actions" style="margin: -2px 0 10px;">
+      <button class="btn-link" id="editSelectedBtn">選択中のレシピを編集</button>
+      <button class="btn-link" id="deleteSelectedBtn" style="color: var(--danger);">選択中のレシピを削除</button>
+    </div>
     <div class="chip-list" id="dishList"></div>
     <p class="empty" id="dishEmpty">まだ料理が選ばれていません。献立を選んで追加してください。</p>
+    <button class="btn-link" id="restoreHiddenBtn" style="margin-top: 8px;">非表示にした定番レシピを元に戻す</button>
   </section>
 
   <section class="card">
     <h2><span class="badge">2</span>オリジナル献立を追加</h2>
-    <p class="hint">材料を自分で入力して献立を登録できます。登録すると「1. 献立を選ぶ」から選べるようになり、人数に応じて分量が自動計算されます。</p>
+    <p class="hint">材料を自分で入力して献立を登録できます。登録すると「1. 献立を選ぶ」から選べるようになり、人数に応じて分量が自動計算されます。定番レシピを選んで編集すると、その内容を上書きできます。</p>
     <div class="row">
       <input type="text" id="newDishNameInput" placeholder="料理名（例：我が家風カレー）" maxlength="30">
       <input type="number" id="newDishServingsInput" min="1" max="20" step="1" value="2" style="max-width: 90px; flex: none;">
@@ -289,7 +294,32 @@
     </div>
     <div class="row">
       <input type="text" id="newIngNameInput" placeholder="材料名（例：じゃがいも）" maxlength="30">
-      <input type="text" id="newIngAmountInput" placeholder="分量（例：3個、大さじ2、少々）" maxlength="20">
+    </div>
+    <div class="row">
+      <input type="number" id="newIngAmountInput" placeholder="分量" min="0" step="0.1" style="max-width: 100px; flex: none;">
+      <select id="newIngUnitSelect" style="max-width: 130px; flex: none;">
+        <option value="個">個</option>
+        <option value="本">本</option>
+        <option value="枚">枚</option>
+        <option value="丁">丁</option>
+        <option value="パック">パック</option>
+        <option value="袋">袋</option>
+        <option value="束">束</option>
+        <option value="片">片</option>
+        <option value="かけ">かけ</option>
+        <option value="尾">尾</option>
+        <option value="玉">玉</option>
+        <option value="缶">缶</option>
+        <option value="g">g</option>
+        <option value="ml">ml</option>
+        <option value="大さじ">大さじ</option>
+        <option value="小さじ">小さじ</option>
+        <option value="カップ">カップ</option>
+        <option value="少々">少々</option>
+        <option value="適量">適量</option>
+        <option value="__custom__">その他（自由入力）</option>
+      </select>
+      <input type="text" id="newIngUnitCustomInput" placeholder="単位を入力" maxlength="10" style="display: none; max-width: 110px; flex: none;">
       <button class="btn-primary" id="addDraftIngBtn">材料を追加</button>
     </div>
     <div class="chip-list" id="draftIngList"></div>
@@ -300,6 +330,12 @@
     </div>
     <div class="chip-list" id="customDishList" style="margin-top: 12px;"></div>
     <p class="empty" id="customDishEmpty">登録済みのオリジナル献立はありません。</p>
+    <p class="hint" style="margin-top: 14px; margin-bottom: 6px;">別のブラウザ・スマホでも同じ献立を使うには、ファイルで書き出して読み込んでください。</p>
+    <div class="footer-actions">
+      <button class="btn-link" id="exportBtn">献立データをエクスポート</button>
+      <label class="btn-link" for="importFileInput" style="cursor: pointer;">献立データをインポート</label>
+      <input type="file" id="importFileInput" accept="application/json,.json" style="display: none;">
+    </div>
   </section>
 
   <section class="card">
@@ -524,11 +560,16 @@
   const addDishBtn = document.getElementById("addDishBtn");
   const dishList = document.getElementById("dishList");
   const dishEmpty = document.getElementById("dishEmpty");
+  const editSelectedBtn = document.getElementById("editSelectedBtn");
+  const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
+  const restoreHiddenBtn = document.getElementById("restoreHiddenBtn");
 
   const newDishNameInput = document.getElementById("newDishNameInput");
   const newDishServingsInput = document.getElementById("newDishServingsInput");
   const newIngNameInput = document.getElementById("newIngNameInput");
   const newIngAmountInput = document.getElementById("newIngAmountInput");
+  const newIngUnitSelect = document.getElementById("newIngUnitSelect");
+  const newIngUnitCustomInput = document.getElementById("newIngUnitCustomInput");
   const addDraftIngBtn = document.getElementById("addDraftIngBtn");
   const draftIngList = document.getElementById("draftIngList");
   const draftIngEmpty = document.getElementById("draftIngEmpty");
@@ -536,9 +577,12 @@
   const cancelEditBtn = document.getElementById("cancelEditBtn");
   const customDishList = document.getElementById("customDishList");
   const customDishEmpty = document.getElementById("customDishEmpty");
+  const exportBtn = document.getElementById("exportBtn");
+  const importFileInput = document.getElementById("importFileInput");
 
   let draftIngredients = [];
   let editingRecipeName = null;
+  let editingWasBuiltIn = false;
 
   const ingredientBody = document.getElementById("ingredientBody");
   const ingredientEmpty = document.getElementById("ingredientEmpty");
@@ -565,6 +609,8 @@
         customIngredients: Array.isArray(parsed.customIngredients) ? parsed.customIngredients : [],
         checked: Array.isArray(parsed.checked) ? parsed.checked : [],
         customRecipes: parsed.customRecipes && typeof parsed.customRecipes === "object" ? parsed.customRecipes : {},
+        hiddenBuiltIns: Array.isArray(parsed.hiddenBuiltIns) ? parsed.hiddenBuiltIns : [],
+        recipeOverrides: parsed.recipeOverrides && typeof parsed.recipeOverrides === "object" ? parsed.recipeOverrides : {},
       };
     } catch (e) {
       return defaultState();
@@ -572,7 +618,10 @@
   }
 
   function defaultState() {
-    return { servings: 2, dishes: [], removedKeys: [], customIngredients: [], checked: [], customRecipes: {} };
+    return {
+      servings: 2, dishes: [], removedKeys: [], customIngredients: [], checked: [],
+      customRecipes: {}, hiddenBuiltIns: [], recipeOverrides: {},
+    };
   }
 
   function saveState() {
@@ -580,23 +629,10 @@
   }
 
   function getRecipe(name) {
-    return RECIPES[name] || state.customRecipes[name];
-  }
-
-  function parseAmountInput(str) {
-    const trimmed = str.trim();
-    if (!trimmed) return { amount: null, unit: "適量" };
-    for (const prefix of PREFIX_UNITS) {
-      const prefixMatch = trimmed.match(new RegExp(`^${prefix}\\s*(\\d+(?:\\.\\d+)?)$`));
-      if (prefixMatch) {
-        return { amount: parseFloat(prefixMatch[1]), unit: prefix };
-      }
-    }
-    const match = trimmed.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
-    if (match) {
-      return { amount: parseFloat(match[1]), unit: match[2] || "" };
-    }
-    return { amount: null, unit: trimmed };
+    if (state.recipeOverrides[name]) return state.recipeOverrides[name];
+    if (state.customRecipes[name]) return state.customRecipes[name];
+    if (RECIPES[name] && !state.hiddenBuiltIns.includes(name)) return RECIPES[name];
+    return undefined;
   }
 
   function formatNumber(n) {
@@ -702,7 +738,7 @@
     dishSelect.innerHTML = "";
     const builtInGroup = document.createElement("optgroup");
     builtInGroup.label = "定番レシピ";
-    Object.keys(RECIPES).forEach((name) => {
+    Object.keys(RECIPES).filter((name) => !state.hiddenBuiltIns.includes(name)).forEach((name) => {
       const opt = document.createElement("option");
       opt.value = name;
       opt.textContent = name;
@@ -724,11 +760,30 @@
     }
   }
 
+  function getSelectedUnit() {
+    if (newIngUnitSelect.value === "__custom__") {
+      return newIngUnitCustomInput.value.trim();
+    }
+    return newIngUnitSelect.value;
+  }
+
   function addDraftIngredient() {
     const name = newIngNameInput.value.trim();
-    const amountStr = newIngAmountInput.value.trim();
     if (!name) return;
-    const { amount, unit } = parseAmountInput(amountStr);
+    const unit = getSelectedUnit();
+    if (!unit) {
+      alert("単位を入力してください。");
+      return;
+    }
+    let amount = null;
+    if (unit !== "少々" && unit !== "適量") {
+      const amountStr = newIngAmountInput.value.trim();
+      amount = parseFloat(amountStr);
+      if (!amountStr || isNaN(amount) || amount <= 0) {
+        alert("分量は正しい数値を入力してください。");
+        return;
+      }
+    }
     draftIngredients.push({ name, amount, unit });
     newIngNameInput.value = "";
     newIngAmountInput.value = "";
@@ -774,11 +829,25 @@
       return;
     }
     const baseServings = parseInt(newDishServingsInput.value, 10) || 2;
-    if (isRename) {
-      delete state.customRecipes[editingRecipeName];
-      state.dishes = [...new Set(state.dishes.map((d) => (d === editingRecipeName ? name : d)))];
+    const ingredients = draftIngredients.map((i) => ({ ...i }));
+
+    if (editingRecipeName && editingWasBuiltIn) {
+      if (isRename) {
+        if (!state.hiddenBuiltIns.includes(editingRecipeName)) state.hiddenBuiltIns.push(editingRecipeName);
+        delete state.recipeOverrides[editingRecipeName];
+        state.dishes = [...new Set(state.dishes.map((d) => (d === editingRecipeName ? name : d)))];
+        state.customRecipes[name] = { baseServings, ingredients };
+      } else {
+        state.recipeOverrides[name] = { baseServings, ingredients };
+      }
+    } else {
+      if (isRename) {
+        delete state.customRecipes[editingRecipeName];
+        state.dishes = [...new Set(state.dishes.map((d) => (d === editingRecipeName ? name : d)))];
+      }
+      state.customRecipes[name] = { baseServings, ingredients };
     }
-    state.customRecipes[name] = { baseServings, ingredients: draftIngredients.map((i) => ({ ...i })) };
+
     cancelEdit();
     saveState();
     renderDishSelect();
@@ -787,9 +856,13 @@
   }
 
   function startEditRecipe(name) {
-    const recipe = state.customRecipes[name];
-    if (!recipe) return;
+    const recipe = getRecipe(name);
+    if (!recipe) {
+      alert("このレシピは見つかりませんでした。");
+      return;
+    }
     editingRecipeName = name;
+    editingWasBuiltIn = Boolean(RECIPES[name]);
     newDishNameInput.value = name;
     newDishServingsInput.value = recipe.baseServings;
     draftIngredients = recipe.ingredients.map((i) => ({ ...i }));
@@ -801,6 +874,7 @@
 
   function cancelEdit() {
     editingRecipeName = null;
+    editingWasBuiltIn = false;
     draftIngredients = [];
     newDishNameInput.value = "";
     newDishServingsInput.value = 2;
@@ -809,14 +883,62 @@
     renderDraftIngredients();
   }
 
-  function removeCustomRecipe(name) {
-    delete state.customRecipes[name];
+  function deleteRecipe(name) {
+    const isCustom = Object.prototype.hasOwnProperty.call(state.customRecipes, name);
+    if (isCustom) {
+      if (!confirm(`「${name}」を削除します。よろしいですか？`)) return;
+      delete state.customRecipes[name];
+    } else if (RECIPES[name]) {
+      if (!confirm(`定番レシピ「${name}」を一覧から非表示にします。よろしいですか？（「非表示にした定番レシピを元に戻す」からいつでも戻せます）`)) return;
+      if (!state.hiddenBuiltIns.includes(name)) state.hiddenBuiltIns.push(name);
+      delete state.recipeOverrides[name];
+    } else {
+      return;
+    }
     state.dishes = state.dishes.filter((d) => d !== name);
     if (editingRecipeName === name) cancelEdit();
     saveState();
     renderDishSelect();
     renderCustomDishes();
     renderAll();
+  }
+
+  function exportRecipes() {
+    const data = {
+      version: 1,
+      customRecipes: state.customRecipes,
+      recipeOverrides: state.recipeOverrides,
+      hiddenBuiltIns: state.hiddenBuiltIns,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "献立データ.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function importRecipesFromFile(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        state.customRecipes = { ...state.customRecipes, ...(data.customRecipes || {}) };
+        state.recipeOverrides = { ...state.recipeOverrides, ...(data.recipeOverrides || {}) };
+        state.hiddenBuiltIns = [...new Set([...state.hiddenBuiltIns, ...(data.hiddenBuiltIns || [])])];
+        saveState();
+        renderDishSelect();
+        renderCustomDishes();
+        renderAll();
+        alert("献立データを読み込みました。");
+      } catch (e) {
+        alert("ファイルの読み込みに失敗しました。正しい献立データファイルか確認してください。");
+      }
+    };
+    reader.readAsText(file);
   }
 
   function renderCustomDishes() {
@@ -836,7 +958,7 @@
       const removeBtn = document.createElement("button");
       removeBtn.textContent = "×";
       removeBtn.title = `${name}を削除`;
-      removeBtn.addEventListener("click", () => removeCustomRecipe(name));
+      removeBtn.addEventListener("click", () => deleteRecipe(name));
       chip.appendChild(label);
       chip.appendChild(editBtn);
       chip.appendChild(removeBtn);
@@ -964,11 +1086,43 @@
 
   addDishBtn.addEventListener("click", addDish);
 
+  editSelectedBtn.addEventListener("click", () => {
+    if (!dishSelect.value) return;
+    startEditRecipe(dishSelect.value);
+  });
+
+  deleteSelectedBtn.addEventListener("click", () => {
+    if (!dishSelect.value) return;
+    deleteRecipe(dishSelect.value);
+  });
+
+  restoreHiddenBtn.addEventListener("click", () => {
+    state.hiddenBuiltIns = [];
+    state.recipeOverrides = {};
+    saveState();
+    renderDishSelect();
+    renderAll();
+  });
+
+  exportBtn.addEventListener("click", exportRecipes);
+
+  importFileInput.addEventListener("change", () => {
+    const file = importFileInput.files[0];
+    if (file) importRecipesFromFile(file);
+    importFileInput.value = "";
+  });
+
   addDraftIngBtn.addEventListener("click", addDraftIngredient);
   newIngNameInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") addDraftIngredient();
   });
   newIngAmountInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addDraftIngredient();
+  });
+  newIngUnitSelect.addEventListener("change", () => {
+    newIngUnitCustomInput.style.display = newIngUnitSelect.value === "__custom__" ? "" : "none";
+  });
+  newIngUnitCustomInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") addDraftIngredient();
   });
   registerDishBtn.addEventListener("click", registerDish);
