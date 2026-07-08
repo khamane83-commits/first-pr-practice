@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>献立買い出しリスト</title>
+<style>
+  :root {
+    --bg: #f4f6f8;
+    --card-bg: #ffffff;
+    --primary: #e0693b;
+    --primary-dark: #b8532c;
+    --accent: #2f7d5e;
+    --text: #1f2933;
+    --text-muted: #6b7785;
+    --border: #e2e6ea;
+    --danger: #d64545;
+    --shadow: 0 2px 8px rgba(31, 41, 51, 0.08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding-bottom: 40px;
+  }
+  header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 28px 20px 24px;
+    text-align: center;
+  }
+  header h1 {
+    margin: 0 0 4px;
+    font-size: 1.5rem;
+  }
+  header p {
+    margin: 0;
+    font-size: 0.85rem;
+    opacity: 0.85;
+  }
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+  .card {
+    background: var(--card-bg);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 18px 18px 20px;
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    font-size: 1.05rem;
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card h2 .badge {
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+  .hint {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin: -6px 0 12px;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  input[type="text"], input[type="number"], select {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: #fbfcfd;
+    min-width: 0;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+  }
+  .servings-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .servings-row label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .servings-row input {
+    max-width: 90px;
+    flex: none;
+  }
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 10px 16px;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+  }
+  button:active { transform: scale(0.97); }
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    white-space: nowrap;
+  }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-accent {
+    background: var(--accent);
+    color: white;
+    white-space: nowrap;
+  }
+  .btn-accent:hover { opacity: 0.85; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--danger);
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+  .btn-ghost:hover { opacity: 0.7; }
+  .btn-link {
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 400;
+    text-decoration: underline;
+    font-size: 0.8rem;
+    padding: 4px;
+  }
+  .chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fdeee7;
+    color: var(--primary-dark);
+    padding: 6px 8px 6px 12px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+  }
+  .chip button {
+    background: none;
+    color: var(--text-muted);
+    padding: 0 4px;
+    font-size: 1rem;
+    line-height: 1;
+  }
+  .empty {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding: 8px 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.78rem;
+  }
+  td.amount { color: var(--text-muted); white-space: nowrap; }
+  .source-tag {
+    font-size: 0.7rem;
+    color: var(--accent);
+    background: #eaf4ef;
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-left: 6px;
+  }
+  .checklist {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .checklist li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: #fbfcfd;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.92rem;
+  }
+  .checklist li input[type="checkbox"] {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+  }
+  .checklist li.checked .item-name,
+  .checklist li.checked .item-amount {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+  .checklist .item-name { flex: 1; }
+  .checklist .item-amount { color: var(--text-muted); font-size: 0.85rem; white-space: nowrap; }
+  .footer-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .copy-feedback {
+    font-size: 0.8rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>献立買い出しリスト</h1>
+  <p>料理と人数を選ぶだけで、必要な材料と買い出しリストを自動作成</p>
+</header>
+
+<main>
+  <section class="card">
+    <h2><span class="badge">1</span>献立を選ぶ</h2>
+    <p class="hint">内蔵レシピDBから料理を選んで人数分の分量を計算します（外部サイトへは接続しません）。</p>
+    <div class="servings-row">
+      <label for="servingsInput">人数</label>
+      <input type="number" id="servingsInput" min="1" max="20" step="1" value="2">
+      <span>人前</span>
+    </div>
+    <div class="row">
+      <select id="dishSelect"></select>
+      <button class="btn-primary" id="addDishBtn">追加</button>
+    </div>
+    <div class="chip-list" id="dishList"></div>
+    <p class="empty" id="dishEmpty">まだ料理が選ばれていません。献立を選んで追加してください。</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="badge">2</span>オリジナル献立を追加</h2>
+    <p class="hint">材料を自分で入力して献立を登録できます。登録すると「1. 献立を選ぶ」から選べるようになり、人数に応じて分量が自動計算されます。</p>
+    <div class="row">
+      <input type="text" id="newDishNameInput" placeholder="料理名（例：我が家風カレー）" maxlength="30">
+      <input type="number" id="newDishServingsInput" min="1" max="20" step="1" value="2" style="max-width: 90px; flex: none;">
+      <span style="align-self: center; font-size: 0.85rem; color: var(--text-muted); white-space: nowrap;">人前の分量</span>
+    </div>
+    <div class="row">
+      <input type="text" id="newIngNameInput" placeholder="材料名（例：じゃがいも）" maxlength="30">
+      <input type="text" id="newIngAmountInput" placeholder="分量（例：3個、大さじ2、少々）" maxlength="20">
+      <button class="btn-primary" id="addDraftIngBtn">材料を追加</button>
+    </div>
+    <div class="chip-list" id="draftIngList"></div>
+    <p class="empty" id="draftIngEmpty">材料がまだ追加されていません。</p>
+    <div class="footer-actions" style="margin-top: 10px;">
+      <button class="btn-accent" id="registerDishBtn">この献立を登録する</button>
+    </div>
+    <div class="chip-list" id="customDishList" style="margin-top: 12px;"></div>
+    <p class="empty" id="customDishEmpty">登録済みのオリジナル献立はありません。</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="badge">3</span>材料リスト</h2>
+    <p class="hint">家にある材料は「削除」で不要リストから外せます。オリジナルの材料も追加できます。</p>
+    <table id="ingredientTable">
+      <thead>
+        <tr><th>材料</th><th>分量</th><th></th></tr>
+      </thead>
+      <tbody id="ingredientBody"></tbody>
+    </table>
+    <p class="empty" id="ingredientEmpty">料理を追加すると、ここに必要な材料が表示されます。</p>
+    <div class="row" style="margin-top: 12px;">
+      <input type="text" id="customNameInput" placeholder="材料名（例：バター）" maxlength="30">
+      <input type="text" id="customAmountInput" placeholder="分量（例：10g）任意" maxlength="20">
+      <button class="btn-primary" id="addCustomBtn">追加</button>
+    </div>
+    <div class="footer-actions" style="margin-top: 8px;">
+      <button class="btn-link" id="restoreRemovedBtn">削除した材料を元に戻す</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="badge">4</span>買い出しリスト</h2>
+    <p class="hint">お店でチェックしながら使えます。買った物にチェックを入れてください。</p>
+    <ul class="checklist" id="shoppingChecklist"></ul>
+    <p class="empty" id="shoppingEmpty">材料リストが空です。</p>
+    <div class="footer-actions" style="margin-top: 14px;">
+      <button class="btn-accent" id="copyListBtn">リストをコピー</button>
+      <span class="copy-feedback" id="copyFeedback"></span>
+      <button class="btn-link" id="resetAllBtn">すべてのデータをリセット</button>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  const STORAGE_KEY = "cooking-shopping-list-state-v1";
+
+  const RECIPES = {
+    "肉じゃが": { baseServings: 2, ingredients: [
+      { name: "じゃがいも", amount: 3, unit: "個" },
+      { name: "にんじん", amount: 1, unit: "本" },
+      { name: "玉ねぎ", amount: 1, unit: "個" },
+      { name: "牛薄切り肉", amount: 150, unit: "g" },
+      { name: "サラダ油", amount: 1, unit: "大さじ" },
+      { name: "だし汁", amount: 300, unit: "ml" },
+      { name: "醤油", amount: 2, unit: "大さじ" },
+      { name: "みりん", amount: 2, unit: "大さじ" },
+      { name: "砂糖", amount: 1, unit: "大さじ" },
+    ]},
+    "カレーライス": { baseServings: 2, ingredients: [
+      { name: "豚肉または鶏肉", amount: 200, unit: "g" },
+      { name: "じゃがいも", amount: 2, unit: "個" },
+      { name: "にんじん", amount: 1, unit: "本" },
+      { name: "玉ねぎ", amount: 1, unit: "個" },
+      { name: "カレールー", amount: 4, unit: "皿分" },
+      { name: "水", amount: 400, unit: "ml" },
+      { name: "ご飯", amount: 2, unit: "杯" },
+    ]},
+    "生姜焼き": { baseServings: 2, ingredients: [
+      { name: "豚ロース薄切り肉", amount: 200, unit: "g" },
+      { name: "玉ねぎ", amount: 0.5, unit: "個" },
+      { name: "しょうが", amount: 1, unit: "かけ" },
+      { name: "醤油", amount: 2, unit: "大さじ" },
+      { name: "みりん", amount: 2, unit: "大さじ" },
+      { name: "酒", amount: 1, unit: "大さじ" },
+      { name: "砂糖", amount: 1, unit: "小さじ" },
+      { name: "サラダ油", amount: 1, unit: "大さじ" },
+    ]},
+    "餃子": { baseServings: 2, ingredients: [
+      { name: "豚ひき肉", amount: 150, unit: "g" },
+      { name: "キャベツ", amount: 0.25, unit: "個" },
+      { name: "ニラ", amount: 0.5, unit: "束" },
+      { name: "餃子の皮", amount: 20, unit: "枚" },
+      { name: "にんにく", amount: 1, unit: "片" },
+      { name: "しょうが", amount: 1, unit: "かけ" },
+      { name: "醤油", amount: 1, unit: "小さじ" },
+      { name: "ごま油", amount: 1, unit: "小さじ" },
+      { name: "塩こしょう", amount: null, unit: "少々" },
+    ]},
+    "味噌汁": { baseServings: 2, ingredients: [
+      { name: "味噌", amount: 2, unit: "大さじ" },
+      { name: "だし汁", amount: 400, unit: "ml" },
+      { name: "豆腐", amount: 0.5, unit: "丁" },
+      { name: "わかめ（乾燥）", amount: 1, unit: "大さじ" },
+      { name: "長ねぎ", amount: 0.25, unit: "本" },
+    ]},
+    "親子丼": { baseServings: 2, ingredients: [
+      { name: "鶏もも肉", amount: 200, unit: "g" },
+      { name: "玉ねぎ", amount: 0.5, unit: "個" },
+      { name: "卵", amount: 3, unit: "個" },
+      { name: "だし汁", amount: 150, unit: "ml" },
+      { name: "醤油", amount: 2, unit: "大さじ" },
+      { name: "みりん", amount: 2, unit: "大さじ" },
+      { name: "砂糖", amount: 1, unit: "大さじ" },
+      { name: "ご飯", amount: 2, unit: "杯" },
+    ]},
+    "麻婆豆腐": { baseServings: 2, ingredients: [
+      { name: "豆腐", amount: 1, unit: "丁" },
+      { name: "豚ひき肉", amount: 100, unit: "g" },
+      { name: "長ねぎ", amount: 0.5, unit: "本" },
+      { name: "にんにく", amount: 1, unit: "片" },
+      { name: "しょうが", amount: 1, unit: "かけ" },
+      { name: "豆板醤", amount: 1, unit: "小さじ" },
+      { name: "味噌", amount: 1, unit: "大さじ" },
+      { name: "醤油", amount: 1, unit: "大さじ" },
+      { name: "鶏がらスープ", amount: 150, unit: "ml" },
+      { name: "片栗粉", amount: 1, unit: "大さじ" },
+    ]},
+    "唐揚げ": { baseServings: 2, ingredients: [
+      { name: "鶏もも肉", amount: 300, unit: "g" },
+      { name: "醤油", amount: 2, unit: "大さじ" },
+      { name: "酒", amount: 1, unit: "大さじ" },
+      { name: "おろしにんにく", amount: 1, unit: "小さじ" },
+      { name: "おろししょうが", amount: 1, unit: "小さじ" },
+      { name: "片栗粉", amount: null, unit: "適量" },
+      { name: "揚げ油", amount: null, unit: "適量" },
+    ]},
+    "野菜炒め": { baseServings: 2, ingredients: [
+      { name: "キャベツ", amount: 0.25, unit: "個" },
+      { name: "もやし", amount: 1, unit: "袋" },
+      { name: "にんじん", amount: 0.5, unit: "本" },
+      { name: "ピーマン", amount: 2, unit: "個" },
+      { name: "豚バラ肉", amount: 150, unit: "g" },
+      { name: "塩こしょう", amount: null, unit: "少々" },
+      { name: "醤油", amount: 2, unit: "小さじ" },
+      { name: "ごま油", amount: 1, unit: "小さじ" },
+    ]},
+    "ハンバーグ": { baseServings: 2, ingredients: [
+      { name: "合いびき肉", amount: 300, unit: "g" },
+      { name: "玉ねぎ", amount: 0.5, unit: "個" },
+      { name: "パン粉", amount: 4, unit: "大さじ" },
+      { name: "牛乳", amount: 3, unit: "大さじ" },
+      { name: "卵", amount: 1, unit: "個" },
+      { name: "塩こしょう", amount: null, unit: "少々" },
+      { name: "ナツメグ", amount: null, unit: "少々" },
+    ]},
+    "チャーハン": { baseServings: 2, ingredients: [
+      { name: "ご飯", amount: 2, unit: "杯" },
+      { name: "卵", amount: 2, unit: "個" },
+      { name: "長ねぎ", amount: 0.5, unit: "本" },
+      { name: "ハムまたはベーコン", amount: 50, unit: "g" },
+      { name: "醤油", amount: 2, unit: "小さじ" },
+      { name: "塩こしょう", amount: null, unit: "少々" },
+      { name: "ごま油", amount: 1, unit: "大さじ" },
+    ]},
+    "焼きそば": { baseServings: 2, ingredients: [
+      { name: "焼きそば麺", amount: 2, unit: "玉" },
+      { name: "キャベツ", amount: 0.25, unit: "個" },
+      { name: "もやし", amount: 1, unit: "袋" },
+      { name: "豚バラ肉", amount: 100, unit: "g" },
+      { name: "焼きそばソース", amount: 1, unit: "袋分" },
+      { name: "青のり", amount: null, unit: "適量" },
+      { name: "紅生姜", amount: null, unit: "適量" },
+    ]},
+    "オムライス": { baseServings: 2, ingredients: [
+      { name: "ご飯", amount: 2, unit: "杯" },
+      { name: "卵", amount: 4, unit: "個" },
+      { name: "鶏もも肉", amount: 100, unit: "g" },
+      { name: "玉ねぎ", amount: 0.5, unit: "個" },
+      { name: "ケチャップ", amount: 4, unit: "大さじ" },
+      { name: "塩こしょう", amount: null, unit: "少々" },
+      { name: "バター", amount: 10, unit: "g" },
+    ]},
+    "ポテトサラダ": { baseServings: 2, ingredients: [
+      { name: "じゃがいも", amount: 3, unit: "個" },
+      { name: "きゅうり", amount: 0.5, unit: "本" },
+      { name: "にんじん", amount: 0.25, unit: "本" },
+      { name: "ハム", amount: 2, unit: "枚" },
+      { name: "マヨネーズ", amount: 3, unit: "大さじ" },
+      { name: "塩こしょう", amount: null, unit: "少々" },
+      { name: "酢", amount: 1, unit: "小さじ" },
+    ]},
+    "豚汁": { baseServings: 2, ingredients: [
+      { name: "豚バラ肉", amount: 100, unit: "g" },
+      { name: "大根", amount: 0.25, unit: "本" },
+      { name: "にんじん", amount: 0.5, unit: "本" },
+      { name: "ごぼう", amount: 0.25, unit: "本" },
+      { name: "こんにゃく", amount: 0.5, unit: "枚" },
+      { name: "豆腐", amount: 0.5, unit: "丁" },
+      { name: "味噌", amount: 2, unit: "大さじ" },
+      { name: "だし汁", amount: 500, unit: "ml" },
+    ]},
+    "すき焼き": { baseServings: 2, ingredients: [
+      { name: "牛薄切り肉", amount: 250, unit: "g" },
+      { name: "白菜", amount: 0.125, unit: "個" },
+      { name: "長ねぎ", amount: 1, unit: "本" },
+      { name: "しらたき", amount: 1, unit: "袋" },
+      { name: "焼き豆腐", amount: 0.5, unit: "丁" },
+      { name: "しいたけ", amount: 4, unit: "枚" },
+      { name: "醤油", amount: 4, unit: "大さじ" },
+      { name: "みりん", amount: 4, unit: "大さじ" },
+      { name: "砂糖", amount: 2, unit: "大さじ" },
+      { name: "卵", amount: 2, unit: "個" },
+    ]},
+    "天ぷら": { baseServings: 2, ingredients: [
+      { name: "エビ", amount: 6, unit: "尾" },
+      { name: "なす", amount: 1, unit: "本" },
+      { name: "かぼちゃ", amount: 0.125, unit: "個" },
+      { name: "ししとう", amount: 4, unit: "本" },
+      { name: "薄力粉", amount: 100, unit: "g" },
+      { name: "卵", amount: 1, unit: "個" },
+      { name: "冷水", amount: 150, unit: "ml" },
+      { name: "揚げ油", amount: null, unit: "適量" },
+    ]},
+    "グリーンサラダ": { baseServings: 2, ingredients: [
+      { name: "レタス", amount: 0.5, unit: "個" },
+      { name: "トマト", amount: 1, unit: "個" },
+      { name: "きゅうり", amount: 0.5, unit: "本" },
+      { name: "ドレッシング", amount: null, unit: "適量" },
+    ]},
+  };
+
+  const WHOLE_UNITS = ["個","本","枚","丁","袋","束","片","かけ","尾","匹","パック","玉","箱","缶"];
+  const PREFIX_UNITS = ["大さじ", "小さじ", "カップ"];
+
+  let state = loadState();
+
+  const servingsInput = document.getElementById("servingsInput");
+  const dishSelect = document.getElementById("dishSelect");
+  const addDishBtn = document.getElementById("addDishBtn");
+  const dishList = document.getElementById("dishList");
+  const dishEmpty = document.getElementById("dishEmpty");
+
+  const newDishNameInput = document.getElementById("newDishNameInput");
+  const newDishServingsInput = document.getElementById("newDishServingsInput");
+  const newIngNameInput = document.getElementById("newIngNameInput");
+  const newIngAmountInput = document.getElementById("newIngAmountInput");
+  const addDraftIngBtn = document.getElementById("addDraftIngBtn");
+  const draftIngList = document.getElementById("draftIngList");
+  const draftIngEmpty = document.getElementById("draftIngEmpty");
+  const registerDishBtn = document.getElementById("registerDishBtn");
+  const customDishList = document.getElementById("customDishList");
+  const customDishEmpty = document.getElementById("customDishEmpty");
+
+  let draftIngredients = [];
+
+  const ingredientBody = document.getElementById("ingredientBody");
+  const ingredientEmpty = document.getElementById("ingredientEmpty");
+  const customNameInput = document.getElementById("customNameInput");
+  const customAmountInput = document.getElementById("customAmountInput");
+  const addCustomBtn = document.getElementById("addCustomBtn");
+  const restoreRemovedBtn = document.getElementById("restoreRemovedBtn");
+
+  const shoppingChecklist = document.getElementById("shoppingChecklist");
+  const shoppingEmpty = document.getElementById("shoppingEmpty");
+  const copyListBtn = document.getElementById("copyListBtn");
+  const copyFeedback = document.getElementById("copyFeedback");
+  const resetAllBtn = document.getElementById("resetAllBtn");
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaultState();
+      const parsed = JSON.parse(raw);
+      return {
+        servings: Number(parsed.servings) > 0 ? Number(parsed.servings) : 2,
+        dishes: Array.isArray(parsed.dishes) ? parsed.dishes : [],
+        removedKeys: Array.isArray(parsed.removedKeys) ? parsed.removedKeys : [],
+        customIngredients: Array.isArray(parsed.customIngredients) ? parsed.customIngredients : [],
+        checked: Array.isArray(parsed.checked) ? parsed.checked : [],
+        customRecipes: parsed.customRecipes && typeof parsed.customRecipes === "object" ? parsed.customRecipes : {},
+      };
+    } catch (e) {
+      return defaultState();
+    }
+  }
+
+  function defaultState() {
+    return { servings: 2, dishes: [], removedKeys: [], customIngredients: [], checked: [], customRecipes: {} };
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function getRecipe(name) {
+    return RECIPES[name] || state.customRecipes[name];
+  }
+
+  function parseAmountInput(str) {
+    const trimmed = str.trim();
+    if (!trimmed) return { amount: null, unit: "適量" };
+    for (const prefix of PREFIX_UNITS) {
+      const prefixMatch = trimmed.match(new RegExp(`^${prefix}\\s*(\\d+(?:\\.\\d+)?)$`));
+      if (prefixMatch) {
+        return { amount: parseFloat(prefixMatch[1]), unit: prefix };
+      }
+    }
+    const match = trimmed.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
+    if (match) {
+      return { amount: parseFloat(match[1]), unit: match[2] || "" };
+    }
+    return { amount: null, unit: trimmed };
+  }
+
+  function formatNumber(n) {
+    const whole = Math.floor(n);
+    const frac = Math.round((n - whole) * 100) / 100;
+    const fracMap = { 0.25: "1/4", 0.5: "1/2", 0.75: "3/4" };
+    if (fracMap[frac]) {
+      return whole > 0 ? `${whole}と${fracMap[frac]}` : fracMap[frac];
+    }
+    if (frac === 0) return String(whole);
+    return String(Math.round(n * 100) / 100);
+  }
+
+  function scaleAmount(amount, unit, factor) {
+    if (amount === null || amount === undefined) return null;
+    const scaled = amount * factor;
+    if (WHOLE_UNITS.includes(unit)) {
+      return Math.ceil(scaled * 2) / 2;
+    }
+    if (unit === "g" || unit === "ml") {
+      return Math.round(scaled / 5) * 5;
+    }
+    return Math.round(scaled * 4) / 4;
+  }
+
+  function formatAmount(amount, unit) {
+    if (amount === null || amount === undefined) return unit;
+    if (PREFIX_UNITS.includes(unit)) return `${unit}${formatNumber(amount)}`;
+    return `${formatNumber(amount)}${unit}`;
+  }
+
+  function computeAggregatedIngredients() {
+    const map = new Map();
+    state.dishes.forEach((dishName) => {
+      const recipe = getRecipe(dishName);
+      if (!recipe) return;
+      const factor = state.servings / recipe.baseServings;
+      recipe.ingredients.forEach((ing) => {
+        const key = `recipe:${ing.name}__${ing.unit}`;
+        const scaled = scaleAmount(ing.amount, ing.unit, factor);
+        if (map.has(key)) {
+          const existing = map.get(key);
+          if (scaled !== null && existing.amount !== null) {
+            existing.amount += scaled;
+          }
+        } else {
+          map.set(key, { key, name: ing.name, amount: scaled, unit: ing.unit, source: "recipe" });
+        }
+      });
+    });
+    return Array.from(map.values());
+  }
+
+  function getVisibleIngredients() {
+    const recipeItems = computeAggregatedIngredients().filter((item) => !state.removedKeys.includes(item.key));
+    const customItems = state.customIngredients
+      .map((c) => ({ key: `custom:${c.id}`, name: c.name, amountText: c.amount, source: "custom", id: c.id }))
+      .filter((item) => !state.removedKeys.includes(item.key));
+    return [...recipeItems, ...customItems];
+  }
+
+  function addDish() {
+    const name = dishSelect.value;
+    if (!name) return;
+    if (state.dishes.includes(name)) {
+      alert("この料理はすでに追加されています。");
+      return;
+    }
+    state.dishes.push(name);
+    saveState();
+    renderAll();
+  }
+
+  function removeDish(name) {
+    state.dishes = state.dishes.filter((d) => d !== name);
+    saveState();
+    renderAll();
+  }
+
+  function removeIngredient(item) {
+    if (item.source === "custom") {
+      state.customIngredients = state.customIngredients.filter((c) => c.id !== item.id);
+    } else {
+      state.removedKeys.push(item.key);
+    }
+    saveState();
+    renderAll();
+  }
+
+  function addCustomIngredient() {
+    const name = customNameInput.value.trim();
+    const amount = customAmountInput.value.trim();
+    if (!name) return;
+    state.customIngredients.push({ id: Date.now(), name, amount: amount || "適量" });
+    customNameInput.value = "";
+    customAmountInput.value = "";
+    saveState();
+    renderAll();
+    customNameInput.focus();
+  }
+
+  function renderDishSelect() {
+    dishSelect.innerHTML = "";
+    const builtInGroup = document.createElement("optgroup");
+    builtInGroup.label = "定番レシピ";
+    Object.keys(RECIPES).forEach((name) => {
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      builtInGroup.appendChild(opt);
+    });
+    dishSelect.appendChild(builtInGroup);
+
+    const customNames = Object.keys(state.customRecipes);
+    if (customNames.length > 0) {
+      const customGroup = document.createElement("optgroup");
+      customGroup.label = "オリジナル";
+      customNames.forEach((name) => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        customGroup.appendChild(opt);
+      });
+      dishSelect.appendChild(customGroup);
+    }
+  }
+
+  function addDraftIngredient() {
+    const name = newIngNameInput.value.trim();
+    const amountStr = newIngAmountInput.value.trim();
+    if (!name) return;
+    const { amount, unit } = parseAmountInput(amountStr);
+    draftIngredients.push({ name, amount, unit });
+    newIngNameInput.value = "";
+    newIngAmountInput.value = "";
+    renderDraftIngredients();
+    newIngNameInput.focus();
+  }
+
+  function removeDraftIngredient(index) {
+    draftIngredients.splice(index, 1);
+    renderDraftIngredients();
+  }
+
+  function renderDraftIngredients() {
+    draftIngList.innerHTML = "";
+    draftIngEmpty.style.display = draftIngredients.length === 0 ? "block" : "none";
+    draftIngredients.forEach((ing, index) => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      const label = document.createElement("span");
+      label.textContent = `${ing.name} ${formatAmount(ing.amount, ing.unit)}`;
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "×";
+      removeBtn.title = "削除";
+      removeBtn.addEventListener("click", () => removeDraftIngredient(index));
+      chip.appendChild(label);
+      chip.appendChild(removeBtn);
+      draftIngList.appendChild(chip);
+    });
+  }
+
+  function registerDish() {
+    const name = newDishNameInput.value.trim();
+    if (!name) {
+      alert("料理名を入力してください。");
+      return;
+    }
+    if (draftIngredients.length === 0) {
+      alert("材料を1つ以上追加してください。");
+      return;
+    }
+    if (getRecipe(name) && !confirm(`「${name}」は既に登録されています。上書きしますか？`)) {
+      return;
+    }
+    const baseServings = parseInt(newDishServingsInput.value, 10) || 2;
+    state.customRecipes[name] = { baseServings, ingredients: draftIngredients.map((i) => ({ ...i })) };
+    draftIngredients = [];
+    newDishNameInput.value = "";
+    newDishServingsInput.value = 2;
+    saveState();
+    renderDraftIngredients();
+    renderDishSelect();
+    renderCustomDishes();
+  }
+
+  function removeCustomRecipe(name) {
+    delete state.customRecipes[name];
+    state.dishes = state.dishes.filter((d) => d !== name);
+    saveState();
+    renderDishSelect();
+    renderCustomDishes();
+    renderAll();
+  }
+
+  function renderCustomDishes() {
+    const names = Object.keys(state.customRecipes);
+    customDishList.innerHTML = "";
+    customDishEmpty.style.display = names.length === 0 ? "block" : "none";
+    names.forEach((name) => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      const label = document.createElement("span");
+      label.textContent = `${name}（${state.customRecipes[name].baseServings}人前）`;
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "×";
+      removeBtn.title = `${name}を削除`;
+      removeBtn.addEventListener("click", () => removeCustomRecipe(name));
+      chip.appendChild(label);
+      chip.appendChild(removeBtn);
+      customDishList.appendChild(chip);
+    });
+  }
+
+  function renderDishes() {
+    dishList.innerHTML = "";
+    dishEmpty.style.display = state.dishes.length === 0 ? "block" : "none";
+    state.dishes.forEach((name) => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      const label = document.createElement("span");
+      label.textContent = name;
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "×";
+      removeBtn.title = `${name}を削除`;
+      removeBtn.addEventListener("click", () => removeDish(name));
+      chip.appendChild(label);
+      chip.appendChild(removeBtn);
+      dishList.appendChild(chip);
+    });
+  }
+
+  function renderIngredients(items) {
+    ingredientBody.innerHTML = "";
+    ingredientEmpty.style.display = items.length === 0 ? "block" : "none";
+
+    items.forEach((item) => {
+      const tr = document.createElement("tr");
+
+      const nameTd = document.createElement("td");
+      nameTd.textContent = item.name;
+      if (item.source === "custom") {
+        const tag = document.createElement("span");
+        tag.className = "source-tag";
+        tag.textContent = "追加";
+        nameTd.appendChild(tag);
+      }
+
+      const amountTd = document.createElement("td");
+      amountTd.className = "amount";
+      amountTd.textContent = item.source === "custom" ? item.amountText : formatAmount(item.amount, item.unit);
+
+      const actionTd = document.createElement("td");
+      const delBtn = document.createElement("button");
+      delBtn.className = "btn-ghost";
+      delBtn.textContent = "削除";
+      delBtn.addEventListener("click", () => removeIngredient(item));
+      actionTd.appendChild(delBtn);
+
+      tr.appendChild(nameTd);
+      tr.appendChild(amountTd);
+      tr.appendChild(actionTd);
+      ingredientBody.appendChild(tr);
+    });
+  }
+
+  function renderShoppingList(items) {
+    shoppingChecklist.innerHTML = "";
+    shoppingEmpty.style.display = items.length === 0 ? "block" : "none";
+
+    items.forEach((item) => {
+      const li = document.createElement("li");
+      const isChecked = state.checked.includes(item.key);
+      if (isChecked) li.classList.add("checked");
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = isChecked;
+      checkbox.addEventListener("change", () => {
+        if (checkbox.checked) {
+          if (!state.checked.includes(item.key)) state.checked.push(item.key);
+        } else {
+          state.checked = state.checked.filter((k) => k !== item.key);
+        }
+        saveState();
+        li.classList.toggle("checked", checkbox.checked);
+      });
+
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "item-name";
+      nameSpan.textContent = item.name;
+
+      const amountSpan = document.createElement("span");
+      amountSpan.className = "item-amount";
+      amountSpan.textContent = item.source === "custom" ? item.amountText : formatAmount(item.amount, item.unit);
+
+      li.appendChild(checkbox);
+      li.appendChild(nameSpan);
+      li.appendChild(amountSpan);
+      shoppingChecklist.appendChild(li);
+    });
+  }
+
+  function copyList(items) {
+    const text = items
+      .map((item) => `・${item.name} ${item.source === "custom" ? item.amountText : formatAmount(item.amount, item.unit)}`)
+      .join("\n");
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      copyFeedback.textContent = "コピーしました";
+      setTimeout(() => { copyFeedback.textContent = ""; }, 2000);
+    }).catch(() => {
+      copyFeedback.textContent = "コピーに失敗しました";
+      setTimeout(() => { copyFeedback.textContent = ""; }, 2000);
+    });
+  }
+
+  function renderAll() {
+    renderDishes();
+    const items = getVisibleIngredients();
+    renderIngredients(items);
+    renderShoppingList(items);
+  }
+
+  servingsInput.addEventListener("change", () => {
+    const value = parseInt(servingsInput.value, 10);
+    state.servings = value > 0 ? value : 2;
+    servingsInput.value = state.servings;
+    saveState();
+    renderAll();
+  });
+
+  addDishBtn.addEventListener("click", addDish);
+
+  addDraftIngBtn.addEventListener("click", addDraftIngredient);
+  newIngNameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addDraftIngredient();
+  });
+  newIngAmountInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addDraftIngredient();
+  });
+  registerDishBtn.addEventListener("click", registerDish);
+
+  addCustomBtn.addEventListener("click", addCustomIngredient);
+  customNameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addCustomIngredient();
+  });
+  customAmountInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addCustomIngredient();
+  });
+
+  restoreRemovedBtn.addEventListener("click", () => {
+    state.removedKeys = state.removedKeys.filter((k) => k.startsWith("custom:"));
+    saveState();
+    renderAll();
+  });
+
+  copyListBtn.addEventListener("click", () => copyList(getVisibleIngredients()));
+
+  resetAllBtn.addEventListener("click", () => {
+    if (confirm("献立・材料・買い出しリストのデータをすべて削除します。よろしいですか？")) {
+      state = defaultState();
+      draftIngredients = [];
+      saveState();
+      renderDishSelect();
+      renderDraftIngredients();
+      renderCustomDishes();
+      renderAll();
+    }
+  });
+
+  servingsInput.value = state.servings;
+  renderDishSelect();
+  renderDraftIngredients();
+  renderCustomDishes();
+  renderAll();
+})();
+</script>
+</body>
+</html>
