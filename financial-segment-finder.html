@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>あなたの金融ニーズ診断 — 年齢×家族構成×資産</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#40382E;
+  --ink-2:#6B6153;
+  --muted:#A69C8C;
+  --line:#ECE3D5;
+  --paper:#FBF6EE;
+  --surface:#FFFFFF;
+  --surface-2:#FBF8F2;
+  --mass:#7CAE93;
+  --mass-soft:#E4F0E8;
+  --upper:#E0A05F;
+  --upper-soft:#FBEBD9;
+  --wealth:#B489C4;
+  --wealth-soft:#F3E7F6;
+  --accent:var(--mass);
+  --accent-soft:var(--mass-soft);
+  --shadow:0 2px 10px rgba(120,96,60,.05), 0 14px 32px rgba(120,96,60,.07);
+  --r-lg:22px;
+  --r-md:16px;
+  --r-sm:12px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Zen Maru Gothic",-apple-system,"Hiragino Kaku Gothic ProN",sans-serif;
+  font-size:15.5px; line-height:1.8; letter-spacing:.01em;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* ---------- hero ---------- */
+header{padding:60px 0 36px}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:12.5px;color:var(--ink-2);background:var(--accent-soft);
+  padding:7px 16px;border-radius:999px;margin:0 0 22px;font-weight:500;
+  transition:background .35s;
+}
+h1{
+  font-family:"Zen Maru Gothic",sans-serif;font-weight:700;
+  font-size:clamp(26px,4.6vw,42px);line-height:1.45;margin:0 0 18px;letter-spacing:.01em;
+  text-wrap:balance;
+}
+h1 .n{font-style:normal;color:var(--accent);transition:color .4s}
+.lede{max-width:58ch;color:var(--ink-2);margin:0}
+
+/* ---------- form ---------- */
+.form-sec{padding:20px 0 0}
+.step-label{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-2);margin-bottom:16px;font-weight:500}
+.step-num{
+  display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;
+  border-radius:999px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;flex:0 0 auto;
+  transition:background .35s;
+}
+.form-card{
+  background:var(--surface);border-radius:var(--r-lg);padding:30px;
+  box-shadow:var(--shadow);border-top:6px solid var(--accent);transition:border-color .35s;
+}
+.form-grid{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:20px}
+.field{display:flex;flex-direction:column;gap:8px}
+.field label{font-size:12.5px;color:var(--ink-2);font-weight:500;padding-left:4px}
+.field .inputwrap{position:relative;display:flex;align-items:center}
+.field input,.field select{
+  width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--surface-2);
+  border:1.5px solid var(--line);border-radius:var(--r-sm);padding:12px 14px;appearance:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+.field input[type="number"]{padding-right:46px}
+.field .unit{position:absolute;right:14px;font-size:13px;color:var(--muted);pointer-events:none}
+.field select{padding-right:34px;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) center,calc(100% - 13px) center;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+.field input:focus,.field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.field .hint{font-size:12px;color:var(--muted);padding-left:4px}
+
+.badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+.badge{
+  display:flex;align-items:center;gap:8px;padding:9px 16px 9px 12px;
+  background:var(--surface-2);border-radius:999px;font-size:13px;color:var(--ink-2);
+}
+.badge .dot{width:8px;height:8px;border-radius:50%;background:var(--tint,var(--accent));flex:0 0 auto}
+.badge b{font-weight:700;color:var(--ink)}
+.badge .arrow{color:var(--muted);margin:0 1px}
+
+details.legend{margin-top:22px}
+details.legend summary{cursor:pointer;font-size:13px;color:var(--ink-2);list-style:none;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+details.legend summary::-webkit-details-marker{display:none}
+details.legend summary::before{content:"";width:0;height:0;border-left:5px solid var(--accent);border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .2s}
+details.legend[open] summary::before{transform:rotate(90deg)}
+.legend-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.legend-col{background:var(--surface-2);padding:16px 18px;border-radius:var(--r-md)}
+.legend-col h4{font-size:12.5px;color:var(--ink-2);margin:0 0 10px;font-weight:700}
+.legend-col ul{margin:0;padding:0;list-style:none;font-size:13px}
+.legend-col li{padding:3px 0;color:var(--ink-2)}
+.legend-col li b{color:var(--ink);font-weight:700}
+.legend-col li span{color:var(--muted);font-size:11.5px}
+
+/* ---------- result ---------- */
+.result-sec{padding:34px 0 8px}
+.result-empty{
+  background:var(--surface);border-radius:var(--r-lg);padding:56px 28px;text-align:center;
+  color:var(--muted);font-size:14px;border:1.5px dashed var(--line);
+}
+.detail{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
+.d-portrait{display:flex;align-items:center;justify-content:center;padding:30px 20px 16px;background:var(--tint-soft,var(--accent-soft));transition:background .3s}
+.d-portrait svg{width:184px;height:92px;display:block}
+.d-issues{padding:26px 30px;background:var(--tint-soft,var(--accent-soft));transition:background .3s}
+.d-issues h4{margin:0 0 14px;font-size:14px;color:var(--ink);font-weight:700;display:flex;align-items:center;gap:8px}
+.d-issues h4::before{content:"💭"}
+.d-issues ol{margin:0;padding-left:0;list-style:none;display:grid;gap:8px;counter-reset:i}
+.d-issues li{padding-left:30px;position:relative;font-size:14px;color:var(--ink-2)}
+.d-issues li::before{
+  content:counter(i);counter-increment:i;position:absolute;left:0;top:.05em;
+  font-size:11.5px;font-weight:700;color:#fff;background:var(--tint,var(--accent));
+  width:19px;height:19px;border-radius:50%;display:grid;place-items:center;
+}
+.d-products{padding:26px 30px}
+.d-products>h4{margin:0 0 16px;font-size:14px;color:var(--ink);font-weight:700;display:flex;align-items:center;gap:8px}
+.d-products>h4::before{content:"💰"}
+.needs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.need{background:var(--surface-2);padding:18px 20px 20px;border-radius:var(--r-md)}
+.need h5{margin:0 0 10px;font-size:13px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px}
+.need h5::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--tint,var(--accent));flex:0 0 auto}
+.need ul{margin:0;padding-left:0;list-style:none;display:grid;gap:7px}
+.need li{font-size:13px;line-height:1.7;color:var(--ink-2);padding-left:12px;position:relative}
+.need li::before{content:"·";position:absolute;left:0;color:var(--muted);font-weight:700}
+
+footer{padding:44px 0 60px;margin-top:36px;color:var(--muted);font-size:12.5px}
+footer p{max-width:66ch;margin:0 0 8px}
+
+@media (max-width:820px){
+  .form-grid{grid-template-columns:1fr}
+  .legend-grid{grid-template-columns:1fr}
+  .form-card{padding:22px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{footer{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="eyebrow" id="eyebrow">3つの数字でわかる、かんたん診断</span>
+  <h1>年齢・家族構成・資産額を入れると、<br><em class="n">あなたに近い区分</em>の金融ニーズがわかります。</h1>
+  <p class="lede">同じ40代のファミリー世帯でも、金融資産が500万円か8,000万円かで、話題は「教育ローン」から「生前贈与」へ移ります。3つの数値を入力するだけで、想定される課題と、検討すべき金融商品を自動で表示します。</p>
+</header>
+
+<section class="form-sec">
+  <p class="step-label"><span class="step-num">1</span>入力する</p>
+  <div class="form-card" id="formCard">
+    <div class="form-grid">
+      <div class="field">
+        <label for="ageInput">年齢</label>
+        <div class="inputwrap">
+          <input type="number" id="ageInput" min="0" max="110" step="1" value="43" inputmode="numeric">
+          <span class="unit">歳</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="hhInput">家族構成</label>
+        <select id="hhInput">
+          <option value="1">単身世帯</option>
+          <option value="2">夫婦世帯（子なし／子が独立）</option>
+          <option value="3" selected>ファミリー世帯（扶養する子がいる）</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="assetInput">保有金融資産</label>
+        <div class="inputwrap">
+          <input type="number" id="assetInput" min="0" step="10" value="600" inputmode="numeric">
+          <span class="unit">万円</span>
+        </div>
+        <span class="hint">預金・株式・投信・保険解約返戻金などの合計（不動産を除く）</span>
+      </div>
+    </div>
+
+    <div class="badges" id="badges"></div>
+
+    <details class="legend">
+      <summary>区分の判定基準を見る</summary>
+      <div class="legend-grid">
+        <div class="legend-col">
+          <h4>年齢</h4>
+          <ul>
+            <li><b>若年層</b> <span>39歳以下</span></li>
+            <li><b>ミドル層</b> <span>40〜59歳</span></li>
+            <li><b>シニア層</b> <span>60歳以上</span></li>
+          </ul>
+        </div>
+        <div class="legend-col">
+          <h4>家族構成</h4>
+          <ul>
+            <li><b>単身世帯</b> <span>自分ひとりの意思決定</span></li>
+            <li><b>夫婦世帯</b> <span>子なし／子独立後</span></li>
+            <li><b>ファミリー世帯</b> <span>扶養する子がいる</span></li>
+          </ul>
+        </div>
+        <div class="legend-col">
+          <h4>保有金融資産</h4>
+          <ul>
+            <li><b>マス層</b> <span>3,000万円未満</span></li>
+            <li><b>アッパーマス層</b> <span>3,000万円〜1億円未満</span></li>
+            <li><b>富裕層</b> <span>1億円以上</span></li>
+          </ul>
+        </div>
+      </div>
+    </details>
+  </div>
+</section>
+
+<section class="result-sec">
+  <p class="step-label" style="margin-top:30px"><span class="step-num">2</span>課題と金融商品を見る</p>
+  <div id="resultArea"></div>
+</section>
+
+<footer>
+  <p>年齢の区切り（40歳・60歳）は簡易的な目安です。実務では「年齢そのもの」ではなくライフイベント（就職・住宅取得・子の進学・退職・親の相続）を重心として当てはめてください。</p>
+  <p>記載の商品名・制度名は想定されるニーズの整理であり、個別の投資判断・税務判断を推奨するものではありません。実際の提案時は適合性の確認と、税理士・弁護士等の専門家連携を前提としてください。</p>
+</footer>
+
+</div>
+
+<script>
+const AGES={y:{n:"若年層"},m:{n:"ミドル層"},s:{n:"シニア層"}};
+const HHS={1:{n:"単身世帯"},2:{n:"夫婦世帯"},3:{n:"ファミリー世帯"}};
+const TIERS={
+  a:{n:"マス層",tint:"var(--mass)",soft:"var(--mass-soft)",hex:"#7CAE93"},
+  b:{n:"アッパーマス層",tint:"var(--upper)",soft:"var(--upper-soft)",hex:"#E0A05F"},
+  c:{n:"富裕層",tint:"var(--wealth)",soft:"var(--wealth-soft)",hex:"#B489C4"}
+};
+
+function person(x,y,scale,color,opacity){
+  return `<g transform="translate(${x} ${y}) scale(${scale})" fill="${color}" fill-opacity="${opacity}">
+    <circle cx="0" cy="0" r="19"/>
+    <path d="M -30 70 Q -30 34 0 34 Q 30 34 30 70 Z"/>
+  </g>`;
+}
+function personSVG(hhKey,hex){
+  let g="";
+  if(hhKey==="1"){
+    g=person(100,16,1,hex,1);
+  }else if(hhKey==="2"){
+    g=person(76,15,0.92,hex,0.55)+person(126,17,1,hex,1);
+  }else{
+    g=person(66,15,0.82,hex,0.5)+person(136,15,0.82,hex,0.5)+person(101,34,0.55,hex,1);
+  }
+  return `<svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="世帯構成のイメージイラスト">${g}</svg>`;
+}
+
+const D={
+"y1a":{issues:["手取りが増えず貯蓄ペースが上がらない","奨学金という負債を抱えたまま資産形成を始めていいのか分からない","保険は必要なのか、そもそも何に入るべきか判断できない"],
+ins:["掛け捨ての就業不能・所得補償を最小限（死亡保障の必要性は低い）","医療は高額療養費制度を前提に薄く","スマホ保険・少額短期など『ついで加入』が接点になる"],
+loan:["奨学金の借換え・繰上返済シミュレーション","リボ／カードローン残高の適正化と一本化","家賃保証、スマホ端末分割、少額のフリーローン"],
+inv:["NISAつみたて投資枠 月1〜3万円、全世界株インデックス1本から","企業型DC／iDeCoの最低拠出","ポイント投資・100円積立など『心理的ハードルの低い入口』"],
+pay:["給与受取をネット銀行に集約し手数料無料枠を活用","コード決済＋クレカを1経済圏に寄せて還元率を最大化","家計簿アプリ連携による支出の可視化"],
+etc:["緊急予備資金（生活費3〜6か月）の確保が投資より先","給与前払い・BNPLの使いすぎ防止","ふるさと納税の初回体験"]},
+
+"y1b":{issues:["所得税・住民税が重く、控除の使い残しがある","現預金と自社株に偏り、分散できていない","独身のまま、いつ何に備えるべきかの軸がない"],
+ins:["高額の就業不能・所得補償（収入が資産形成の源泉）","変額保険・外貨建てを税制メリットの観点で検討","海外出張が多ければクレカ付帯を超える旅行傷害保険"],
+loan:["単身向けマンション購入の住宅ローン＋住宅ローン控除","投資用ワンルームの勧誘に対する冷静な採算判断","有価証券担保ローン（自社株を売らずに手元流動性を作る）"],
+inv:["NISA成長投資枠をフル活用、特定口座でETF・個別株","iDeCo／企業型DCのマッチング拠出","ロボアド・投資一任で管理工数を下げる","暗号資産・オルタナは資産の数%まで"],
+pay:["プラチナカード（旅行傷害・ラウンジ・年会費見合い）","外貨決済・海外送金の手数料最適化"],
+etc:["ふるさと納税の上限最適化","RSU／ストックオプションの課税タイミング相談","確定申告サポート"]},
+
+"y1c":{issues:["事業リスクと個人資産が分離できていない","急増した資産の受け皿・運用体制がない","若くして相続・贈与を考える必要が出てきた"],
+ins:["法人契約の生命保険・役員退職金原資","事業保障（借入・キーマンリスク）","高額の医療・海外旅行保険"],
+loan:["収益不動産取得のプロパー融資／アパートローン","有価証券担保ローン（納税・投資機会への即応）"],
+inv:["プライベートバンキング／ウェルスマネジメントの本格導入","私募ファンド・PE・ヘッジファンドなどオルタナ","未上場株投資・エンジェル投資","海外口座・通貨分散"],
+pay:["インビテーション制のハイエンドカード、コンシェルジュ","法人カードと個人カードの明確な使い分け"],
+etc:["資産管理会社の設立と法人での運用","自社株評価・事業承継の初期設計","税理士・弁護士とのチーム組成"]},
+
+"y2a":{issues:["住宅取得の頭金と、借入可能額の上限が読めない","子どもを持った後の家計が想像できない","家計が『どんぶり』で、どちらがいくら貯めたか不明"],
+ins:["収入保障保険（住宅取得と同時に必要保障額が立ち上がる）","団信の上乗せ（がん団信等）の要否判断","火災・地震保険、女性疾病"],
+loan:["ペアローン／収入合算・連帯債務の設計","住宅ローン控除、フラット35、諸費用ローン","変動か固定かの金利タイプ選択"],
+inv:["夫婦それぞれのNISAつみたて枠","財形住宅・社内預金","出産前の『貯めどき』を活かした先取り積立"],
+pay:["共通口座＋家族カードで生活費を一本化","家計共有アプリ、生活費のポイント集約"],
+etc:["出産・育休給付のキャッシュフロー試算","住宅取得等資金の贈与非課税枠（親からの援助）","ライフプラン表の初回作成"]},
+
+"y2b":{issues:["高額な住宅ローンと投資を同時に進めてよいか","税負担が重く、使える控除を取りこぼしている","どちらかが働けなくなった時の耐性が読めない"],
+ins:["高額の収入保障・就業不能（2人分の返済を単独で背負うリスク）","ドル建て終身・変額など資産性のある保険","勤務医であれば法人契約の可能性"],
+loan:["1億円超のペアローン、金利上昇時のストレステスト","繰上返済と運用の期待リターン比較","住宅ローン控除期間中の返済戦略"],
+inv:["夫婦それぞれNISAフル活用＋特定口座","投資一任・ファンドラップ／SMA","区分・1棟の不動産投資","iDeCo／企業型DC"],
+pay:["プラチナ〜ブラック相当、旅行系ポイントの高効率化","外貨決済・海外送金"],
+etc:["ふるさと納税上限の最適化","親からの贈与の年次計画","世帯バランスシートの作成"]},
+
+"y2c":{issues:["承継した資産を自分たちで管理しきれていない","親世代の資産と一体で考える必要がある","収益不動産の運営が手間で、専門知識も足りない"],
+ins:["生前贈与と組み合わせた保険活用","納税資金の確保","法人契約（資産管理会社での加入）"],
+loan:["収益不動産のアパートローン・組替え資金","有価証券担保ローン"],
+inv:["プライベートバンキング／ファンドラップ","私募REIT・不動産小口化商品","通貨・地域の分散、海外資産"],
+pay:["ハイエンドカード、コンシェルジュサービス"],
+etc:["家族信託・暦年贈与／相続時精算課税の設計","資産管理会社の設立","不動産管理の外部委託と収支の可視化"]},
+
+"y3a":{issues:["教育費と住宅費が同時に発生し、貯蓄余力が薄い","万一の時に家族の生活費をどう賄うか","目先の支出に追われ、老後準備が完全に後回し"],
+ins:["収入保障保険が最優先(必要保障額のピーク)","こども医療、火災・地震保険","学資保険はNISAとの比較で判断"],
+loan:["住宅ローン（返済比率が高め、借換え余地の点検）","自動車ローン／残価設定型","将来の教育ローン・奨学金の見通し"],
+inv:["少額でも継続できるNISAつみたて（金額より継続性）","児童手当を自動で積立に回す仕組み","子ども名義の口座と贈与の考え方"],
+pay:["家族カードで支出を集約、日用品の高還元","公共料金・保険料の口座振替／クレカ払い"],
+etc:["緊急予備資金3〜6か月の確保","固定費（通信・保険・サブスク）の一括見直し","児童手当・高校無償化など公的給付の把握"]},
+
+"y3b":{issues:["私立・塾を含む教育費の総額が読めない","住宅ローンと教育費のダブル負担","親世代からの支援・相続をどう組み込むか"],
+ins:["大型の収入保障＋定期保険","学資の代替としての外貨建て・変額","自営・法人役員なら法人契約"],
+loan:["高額住宅ローン、繰上返済の意思決定","低利の教育ローン枠の確保"],
+inv:["夫婦それぞれNISAフル＋特定口座","子ども名義の長期積立","外貨・債券を含む分散"],
+pay:["学費・塾費用に耐える高限度額カード","年会費有料カードの損益分岐の確認"],
+etc:["教育資金の一括贈与非課税制度の活用","祖父母を含めた三世代提案","教育費キャッシュフロー表の作成"]},
+
+"y3c":{issues:["事業と家計の資金が分離できていない","高い税負担と、退職金・老後原資の準備","子3人の教育と、将来の承継"],
+ins:["法人契約の逓増定期・長期平準定期","事業保障（借入・休業リスク）、所得補償","高額な医療・海外旅行保険"],
+loan:["医療機器・設備のリース／ローン","開業ローンの借換え","収益不動産の取得資金"],
+inv:["法人と個人を分けた運用設計","プライベートバンキング、私募ファンド","不動産、小規模企業共済・経営セーフティ共済"],
+pay:["法人カード＋個人ハイエンドカードの使い分け"],
+etc:["医療法人化の検討","教育資金贈与、家族信託","後継者育成と承継の長期設計"]},
+
+"m1a":{issues:["老後資金が足りるのか、漠然とした不安がある","親の介護と自分の医療費、どちらも自分で背負う","独身ゆえ、倒れた時に頼る先がない"],
+ins:["医療・がん・介護保険（自分の生活を守る保障）","就業不能保険。死亡保障のニーズは低い","親の医療・介護費用の負担想定"],
+loan:["賃貸か持家かの決断（単身向け住宅ローンの与信）","マイカーローン、少額のフリーローン"],
+inv:["iDeCoの所得控除メリットが最も効く層","NISAつみたてで残り20年の複利を取りにいく","退職金・年金額を前提とした受給シミュレーション"],
+pay:["生活費のポイント集約、サブスクの棚卸し","公共料金のクレカ払い"],
+etc:["身元保証・任意後見の初期相談","親の資産・保険の把握と、実家の処分方針","おひとりさま向けの終活・死後事務"]},
+
+"m1b":{issues:["自分の資産を最終的に誰に遺すのか決めていない","判断能力が落ちた時に資産が凍結されるリスク","運用が預金と投信に偏り、次の一手が見えない"],
+ins:["介護・認知症保険、医療保険","所得補償（自営のため公的保障が薄い）","一時払終身（遺贈先を指定できる点が有効）"],
+loan:["自宅購入・リノベーションローン","有価証券担保ローン（事業資金の機動的確保）"],
+inv:["コア・サテライト戦略の導入","債券・外貨・不動産への分散","投資一任・ファンドラップで運用の外部化","小規模企業共済・iDeCo"],
+pay:["ハイエンドカード、趣味・旅行系ポイント"],
+etc:["遺言の作成（兄弟姉妹相続・国庫帰属の回避）","任意後見・死後事務委任契約","家族信託、身元保証サービス"]},
+
+"m1c":{issues:["承継する相手がいない（親族内承継が難しい）","相続人が兄弟姉妹・甥姪となり、争いの火種がある","自社株の評価が高く、納税資金が読めない"],
+ins:["法人契約の生命保険、役員退職金原資","納税資金確保のための一時払終身","介護・認知症保険"],
+loan:["事業・不動産のプロパー融資","有価証券担保ローン"],
+inv:["プライベートバンキング","私募・オルタナ、不動産、海外分散","資産管理会社を通じた運用"],
+pay:["インビテーション制カード、法人カード"],
+etc:["遺言・遺言信託（最優先）","M&Aによる第三者承継の検討","任意後見、寄付・遺贈、財団設立"]},
+
+"m2a":{issues:["いわゆる老後資金2,000万円に届くか不安","住宅ローンを退職までに返し切れるか","退職金の使い道を決めていない"],
+ins:["死亡保障を縮小し、医療・がん・介護へシフト","払済保険への変更で保険料負担を軽く","親の介護に備える保障"],
+loan:["住宅ローンの繰上返済・借換えの損益判断","水回り・屋根等のリフォームローン"],
+inv:["iDeCo・NISAでの追い込み（残り10〜15年）","退職金の受取方法（一時金／年金）の事前設計","公的年金の繰下げ受給の検討"],
+pay:["生活防衛的な高還元カード、公共料金の集約"],
+etc:["ねんきん定期便の読み解きと受給額の確定","親の相続の当事者になる準備","実家の空き家問題"]},
+
+"m2b":{issues:["増やす局面から、取り崩す局面への切替え方が分からない","親からの相続と、自分たちの相続対策が同時に来る","子への支援をどこまでするか"],
+ins:["一時払終身（生命保険の非課税枠を使った相続対策）","介護・認知症、医療","保障の整理と払済み化"],
+loan:["住宅ローンの完済・借換え","二世帯リフォーム、セカンドハウス取得"],
+inv:["出口を意識した資産配分（債券・安定資産の比率を上げる）","ファンドラップ、外貨、不動産","退職金プレ・アフターの運用相談"],
+pay:["旅行・趣味に強いカード、家族カード"],
+etc:["生前贈与の年次実行（暦年／相続時精算課税）","実家の空き家対策、不動産の名義整理","遺言・家族信託の検討開始"]},
+
+"m2c":{issues:["自社株の評価が高く、そのままでは納税できない","複数の不動産が分けにくく、争族リスクがある","経営から資産管理へ、重心を移す時期"],
+ins:["逓増定期・長期平準定期、一時払終身","納税資金の確保","法人契約と個人契約の整理"],
+loan:["自社株買取・承継資金の融資","収益不動産の組替え資金","有価証券担保ローン"],
+inv:["プライベートバンキング、私募・オルタナ","資産管理会社での運用、海外分散"],
+pay:["ブラックカード、法人カード、コンシェルジュ"],
+etc:["事業承継税制の適用検討、持株会社化","家族信託、遺言","後継者育成、慈善寄付・財団"]},
+
+"m3a":{issues:["大学進学で支出が跳ね、貯蓄が減っていく","住宅ローンと教育費が重なり、老後準備ができない","積立を止めるべきか続けるべきか判断できない"],
+ins:["収入保障の必要額を再計算し過不足を調整","医療・がん保険","学資保険の受取タイミングと進学時期の整合"],
+loan:["教育ローン・奨学金（給付型／貸与型の比較）","住宅ローンの借換えで月々を圧縮","マイカーローン"],
+inv:["積立の中断リスクが最大。金額を下げてでも継続","iDeCoは60歳まで引き出せない点に注意","学資の取り崩し順序の設計"],
+pay:["学費・塾費用の高額決済とポイント","家族カードで支出を可視化"],
+etc:["教育費キャッシュフロー表の作成","高等教育の修学支援制度の確認","固定費の再点検"]},
+
+"m3b":{issues:["私立・留学で教育費が読みにくい","教育費と老後資金の両立","親の相続と自分たちの資産計画が重なる"],
+ins:["死亡保障を縮小し、資産性のある保険へ組替え","介護・医療","親の相続に備えた納税資金"],
+loan:["教育ローン、住宅ローンの繰上返済判断","セカンドハウス・投資用不動産"],
+inv:["夫婦NISAフル＋特定口座","債券・外貨で安定資産を厚く","ファンドラップ、不動産"],
+pay:["高限度額カード、留学関連の外貨決済・海外送金"],
+etc:["教育資金の一括贈与、住宅取得資金贈与","実家の相続対策・不動産の分割方針","世帯バランスシートの作成"]},
+
+"m3c":{issues:["次世代への移転を、税負担を抑えつつ計画的に進めたい","自社株が資産の大半を占め流動性がない","子に資産を渡す前に金融リテラシーを持たせたい"],
+ins:["逓増定期、一時払終身、納税資金対策","事業保障、法人契約の整理"],
+loan:["自社株・不動産の取得資金","有価証券担保ローン"],
+inv:["プライベートバンキング、私募・PE","不動産、海外分散","資産管理会社での運用"],
+pay:["ブラック／法人カード、コンシェルジュ"],
+etc:["事業承継の長期設計、持株会社化","家族信託、ファミリーガバナンス","子への金融教育プログラム"]},
+
+"s1a":{issues:["年金だけでは生活費が足りず、資産が目減りする","医療・介護が必要になった時の費用と、頼る人がいない","持家が資産の大半で、現金化できていない"],
+ins:["引受基準緩和型の医療・介護保険","少額短期保険、葬儀費用の準備","既契約の整理（払いすぎの点検）"],
+loan:["リバースモーゲージ・不動産担保型生活資金","リースバック（条件を慎重に精査）","過剰なリフォームローンの勧誘への注意"],
+inv:["元本重視。個人向け国債、定期預金の優遇金利","リスク商品の適合性は厳しく判断すべき層","取り崩し計画（何歳までいくら使えるか）の見える化"],
+pay:["シンプルな決済手段に絞る、公共料金の口座振替","特殊詐欺・不正利用のモニタリングと上限設定"],
+etc:["身元保証・死後事務委任","代理人カード、家族の連絡先登録","地域包括支援センター等との連携"]},
+
+"s1b":{issues:["認知機能が落ちた時に口座や資産が凍結される","取り崩しの順序と、資産が何歳まで持つか","子2人にどう分けるか決めていない"],
+ins:["一時払終身（非課税枠・受取人指定による円滑な移転）","介護・認知症保険、医療保険"],
+loan:["原則不要。必要時は不動産担保型を検討"],
+inv:["取り崩し前提のポートフォリオ（安定資産中心）","定期売却サービス、個人年金・年金保険","債券・預金の満期分散"],
+pay:["代理人カード、利用上限設定、不正検知の強化"],
+etc:["家族信託・任意後見（最優先テーマ）","遺言の作成","口座・保険・デジタル遺産の棚卸し","金融ジェロントロジーに配慮した対応"]},
+
+"s1c":{issues:["法定相続人が甥姪となり、意図が反映されにくい","相続税の納税資金と、資産の分けにくさ","自分の意思を残す仕組みがない"],
+ins:["一時払終身（受取人指定で確実に渡す）","納税資金の確保","介護・認知症保険"],
+loan:["有価証券担保ローン（納税・機動的資金）"],
+inv:["プライベートバンキング、債券中心の保守運用","不動産、海外分散","資産管理会社での運用"],
+pay:["ハイエンドカード＋代理人カード"],
+etc:["遺言信託（最重要）","寄付・遺贈、公益財団の設立","任意後見、税理士・弁護士とのチーム体制"]},
+
+"s2a":{issues:["まとまった退職金の置き場が決まらない","医療・介護がいつ、いくらかかるか読めない","年金の受け取り方で損得があると聞いたが分からない"],
+ins:["医療・がん・介護保険","保障の整理・払済み化で固定費を圧縮","夫婦それぞれの必要保障の見直し"],
+loan:["リフォームローン、車の買い替え資金","住宅ローンは完済済み"],
+inv:["退職金定期＋バランス型のセット提案（手数料に注意）","個人向け国債、iDeCo／DCの受取方法（一時金・年金・併用）","取り崩しペースの設計"],
+pay:["年金受取口座の優遇、シニア向け割引","生活費の高還元カード"],
+etc:["公的年金の繰下げ受給の損益分岐","高額療養費・介護保険の自己負担の理解","親世代の相続の当事者対応"]},
+
+"s2b":{issues:["資産寿命をどこまで延ばせるか","認知症になった時に資産が動かせなくなる","孫への支援と相続税のバランス"],
+ins:["一時払終身（500万円×法定相続人の非課税枠の活用）","介護・認知症保険、医療保険"],
+loan:["原則不要。二世帯リフォーム時に不動産担保を検討"],
+inv:["定額／定率の取り崩し設計","債券・年金保険で安定収入を作る","ファンドラップ、預金の満期分散"],
+pay:["代理人カード、家族カード","支援を兼ねた贈与と決済の使い分け"],
+etc:["暦年贈与の年次実行、教育資金の一括贈与","家族信託・任意後見","遺言、実家・空き家の対策"]},
+
+"s2c":{issues:["相続税の圧縮と、納税資金の手当てが両立しない","不動産が多く、子2人で公平に分けられない","家族間で資産の話をしたことがない"],
+ins:["一時払終身、生前贈与プランと組み合わせた設計","納税資金の確保（物納・延納の回避）"],
+loan:["有価証券担保ローン","不動産の組替え・買替え資金"],
+inv:["プライベートバンキング","債券・私募REIT、海外分散","資産管理会社での保有"],
+pay:["ブラックカード、代理人カード"],
+etc:["遺言・遺言信託（争族回避の要）","不動産の組替え／法人化による分割しやすさの確保","家族会議・ファミリーガバナンス","寄付・社会貢献"]},
+
+"s3a":{issues:["教育費と老後準備が同時進行で、どちらも足りない","親の介護費用を誰がどこまで負担するか","再雇用後の収入減にどう備えるか"],
+ins:["医療・がん・介護保険","保障の縮小と保険料の圧縮","親の医療費・介護費のカバー"],
+loan:["教育ローン・奨学金","住宅ローンの完済前倒し／退職金での返済判断","バリアフリーリフォーム"],
+inv:["遅れた老後準備のキャッチアップ（iDeCo・NISA）","退職金プレ相談、受取方法の設計"],
+pay:["家族カード、固定費（通信・保険）の削減"],
+etc:["60歳以降の就労と在職老齢年金の設計","親の資産凍結対策（代理人届・任意後見）","介護保険サービスの利用計画"]},
+
+"s3b":{issues:["子への支援と、自分たちの老後資金の線引き","三世代での資金の移し方が分からない","退職後の収入と取り崩しの設計"],
+ins:["一時払終身（相続対策）","介護・認知症、医療"],
+loan:["親子リレー返済・連帯保証など子の住宅ローン支援","二世帯リフォーム"],
+inv:["取り崩し設計（定額／定率）","債券・年金保険で安定収入","ファンドラップ、退職金運用"],
+pay:["家族カード、代理人カードの事前登録"],
+etc:["住宅取得等資金の贈与非課税、暦年贈与","遺言、家族信託","実家（親世代）の相続対応"]},
+
+"s3c":{issues:["承継を完了させるまでの実務とスケジュール","巨額の相続税に対する納税資金","一族内の合意形成と、次世代の統治"],
+ins:["一時払終身、逓増定期","納税資金の確保、法人契約の整理"],
+loan:["自社株買取・納税資金の融資","有価証券担保ローン、不動産の組替え資金"],
+inv:["プライベートバンキング、私募・オルタナ","不動産、海外分散","資産管理会社・持株会社での運用"],
+pay:["ブラック／法人カード、コンシェルジュ"],
+etc:["事業承継税制の適用と実行","家族信託、ファミリーオフィス","慈善財団、次世代への金融教育","家族憲章・ファミリーガバナンス"]}
+};
+
+const CAT=[["ins","保険"],["loan","ローン"],["inv","投資・資産形成"],["pay","決済・ポイント"],["etc","その他（信託・税務）"]];
+
+const ageInput=document.getElementById("ageInput");
+const hhInput=document.getElementById("hhInput");
+const assetInput=document.getElementById("assetInput");
+const badges=document.getElementById("badges");
+const resultArea=document.getElementById("resultArea");
+const formCard=document.getElementById("formCard");
+const root=document.documentElement;
+
+function classify(age,assets){
+  const ageKey = age<40 ? "y" : age<60 ? "m" : "s";
+  const tierKey = assets<3000 ? "a" : assets<10000 ? "b" : "c";
+  return {ageKey,tierKey};
+}
+
+function fmtAsset(v){
+  return v>=10000 ? (v/10000).toFixed(v%10000===0?0:1)+"億円" : v.toLocaleString("ja-JP")+"万円";
+}
+
+function detailHTML(id,t){
+  const d=D[id];
+  const hhKey=id[1];
+  return `<div class="d-portrait" style="--tint-soft:${t.soft}">${personSVG(hhKey,t.hex)}</div>
+  <div class="d-issues" style="--tint:${t.tint};--tint-soft:${t.soft}"><h4>抱える課題</h4><ol>${d.issues.map(x=>`<li>${x}</li>`).join("")}</ol></div>
+  <div class="d-products" style="--tint:${t.tint}"><h4>検討すべき金融商品</h4>
+    <div class="needs">${CAT.map(([k,n])=>
+      `<div class="need"><h5>${n}</h5><ul>${d[k].map(x=>`<li>${x}</li>`).join("")}</ul></div>`).join("")}</div>
+  </div>`;
+}
+
+function update(){
+  const age=parseInt(ageInput.value,10);
+  const hhKey=hhInput.value;
+  const assets=parseFloat(assetInput.value);
+
+  if(!Number.isFinite(age)||age<0||!Number.isFinite(assets)||assets<0){
+    badges.innerHTML="";
+    resultArea.innerHTML=`<div class="result-empty">年齢と保有金融資産を入力すると、課題と金融商品が表示されます。</div>`;
+    return;
+  }
+
+  const {ageKey,tierKey}=classify(age,assets);
+  const id=ageKey+hhKey+tierKey;
+  const t=TIERS[tierKey];
+
+  root.style.setProperty("--accent",t.tint);
+  root.style.setProperty("--accent-soft",t.soft);
+
+  badges.innerHTML=`
+    <div class="badge" style="--tint:${t.tint}"><span class="dot"></span>${age}歳 <span class="arrow">→</span> <b>${AGES[ageKey].n}</b></div>
+    <div class="badge" style="--tint:${t.tint}"><span class="dot"></span>${HHS[hhKey].n}</div>
+    <div class="badge" style="--tint:${t.tint}"><span class="dot"></span>${fmtAsset(assets)} <span class="arrow">→</span> <b>${t.n}</b></div>
+  `;
+
+  const detail=document.createElement("div");
+  detail.className="detail";
+  detail.innerHTML=detailHTML(id,t);
+  resultArea.innerHTML="";
+  resultArea.appendChild(detail);
+}
+
+[ageInput,hhInput,assetInput].forEach(el=>el.addEventListener("input",update));
+update();
+</script>
+</body>
+</html>
