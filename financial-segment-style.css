@@ -107,7 +107,7 @@ details.legend[open] summary::before{transform:rotate(90deg)}
 }
 .summary-card{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
 .d-portrait{display:flex;flex-direction:column;align-items:center;gap:18px;padding:32px 20px 26px;background:var(--tint-soft,var(--accent-soft))}
-.d-portrait svg{width:184px;height:92px;display:block}
+.d-portrait svg{width:230px;height:auto;display:block}
 
 .result-block{margin-top:40px}
 .result-heading{font-size:20px;font-weight:700;color:var(--ink);margin:0 0 18px;display:flex;align-items:center;gap:10px}
