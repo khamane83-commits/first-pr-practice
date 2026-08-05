@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>あなたの金融ニーズ診断 — 年齢×家族構成×資産</title>
+<title>あなたの金融ニーズ診断 — 50区分ファインダー</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
@@ -13,14 +13,14 @@
 <div class="wrap">
 
 <header>
-  <span class="eyebrow">3つの数字でわかる、かんたん診断</span>
+  <span class="eyebrow">50区分で見つける、あなたの金融ニーズ</span>
   <h1>年齢・家族構成・資産額を入れると、<br><em class="n">あなたに近い区分</em>の金融ニーズがわかります。</h1>
-  <p class="lede">同じ40代のファミリー世帯でも、金融資産が500万円か8,000万円かで、話題は「教育ローン」から「生前贈与」へ移ります。3つの数値を入力して診断すると、あなたの課題と検討すべき金融サービスをまとめたページが表示されます。</p>
+  <p class="lede">同じ40代のファミリー世帯でも、賃貸か持家か、自力で築いた資産か相続した資産かで、話題は大きく変わります。マス層9区分・アッパーマス層18区分・富裕層16区分、あわせて50通りの中からもっとも近い区分を判定します。質問は該当するものだけ、その場で追加表示されます。</p>
 </header>
 
 <section class="form-sec">
   <p class="step-label"><span class="step-num">1</span>入力する</p>
-  <form class="form-card" action="financial-segment-result.html" method="get">
+  <form class="form-card" action="financial-segment-result.html" method="get" id="segForm">
     <div class="form-grid">
       <div class="field">
         <label for="ageInput">年齢</label>
@@ -32,9 +32,10 @@
       <div class="field">
         <label for="hhInput">家族構成</label>
         <select id="hhInput" name="hh">
-          <option value="1">単身世帯</option>
-          <option value="2">夫婦世帯（子なし／子が独立）</option>
-          <option value="3" selected>ファミリー世帯（扶養する子がいる）</option>
+          <option value="single">単身世帯</option>
+          <option value="couple">夫婦世帯</option>
+          <option value="family" selected>ファミリー世帯（未成年の子と同居）</option>
+          <option value="withchild">子と同居（成人した子と同居）</option>
         </select>
       </div>
       <div class="field">
@@ -47,31 +48,73 @@
       </div>
     </div>
 
+    <div class="form-grid cond-grid" id="condGrid">
+      <div class="field cond-field" id="housingField" hidden>
+        <label for="housingInput">住居形態</label>
+        <select id="housingInput" name="housing" disabled>
+          <option value="rent">賃貸</option>
+          <option value="own">持家</option>
+        </select>
+      </div>
+      <div class="field cond-field" id="investField" hidden>
+        <label for="investInput">資産の運用状況</label>
+        <select id="investInput" name="invest" disabled>
+          <option value="none">預金・現金が中心</option>
+          <option value="started">投資信託・株式などを運用中</option>
+        </select>
+      </div>
+      <div class="field cond-field" id="childAgeField" hidden>
+        <label for="childAgeInput">末子の年齢</label>
+        <div class="inputwrap">
+          <input type="number" id="childAgeInput" name="childAge" min="0" max="22" step="1" value="10" inputmode="numeric" disabled>
+          <span class="unit">歳</span>
+        </div>
+      </div>
+      <div class="field cond-field" id="originField" hidden>
+        <label for="originInput">資産の主な形成方法</label>
+        <select id="originInput" name="origin" disabled>
+          <option value="self">自力形成（収入からの積立・運用）</option>
+          <option value="inherit">相続・贈与による取得</option>
+        </select>
+      </div>
+      <div class="field cond-field" id="occupationField" hidden>
+        <label for="occupationInput">職業・資産形成タイプ</label>
+        <select id="occupationInput" name="occupation" disabled>
+          <option value="owner">事業オーナー（現役）</option>
+          <option value="retiredOwner">引退オーナー（事業売却・譲渡済み）</option>
+          <option value="pro">給与所得者・専門職（勤務医・役員など）</option>
+          <option value="landlord">承継・地主（地主・不動産オーナー）</option>
+        </select>
+      </div>
+    </div>
+
     <details class="legend">
       <summary>区分の判定基準を見る</summary>
       <div class="legend-grid">
         <div class="legend-col">
-          <h4>年齢</h4>
+          <h4>年齢（マス層・アッパーマス層）</h4>
           <ul>
             <li><b>若年層</b> <span>39歳以下</span></li>
-            <li><b>ミドル層</b> <span>40〜59歳</span></li>
-            <li><b>シニア層</b> <span>60歳以上</span></li>
+            <li><b>ミドル層</b> <span>40〜49歳</span></li>
+            <li><b>プレリタイア層</b> <span>50〜64歳</span></li>
+            <li><b>リタイア層</b> <span>65歳以上</span></li>
           </ul>
         </div>
         <div class="legend-col">
-          <h4>家族構成</h4>
+          <h4>年齢（富裕層）</h4>
           <ul>
-            <li><b>単身世帯</b> <span>自分ひとりの意思決定</span></li>
-            <li><b>夫婦世帯</b> <span>子なし／子独立後</span></li>
-            <li><b>ファミリー世帯</b> <span>扶養する子がいる</span></li>
+            <li><b>形成期</b> <span>〜49歳</span></li>
+            <li><b>ピーク期</b> <span>50〜59歳</span></li>
+            <li><b>承継準備期</b> <span>60〜69歳</span></li>
+            <li><b>承継実行期</b> <span>70歳以上</span></li>
           </ul>
         </div>
         <div class="legend-col">
           <h4>保有金融資産</h4>
           <ul>
-            <li><b>マス層</b> <span>3,000万円未満</span></li>
-            <li><b>アッパーマス層</b> <span>3,000万円〜1億円未満</span></li>
-            <li><b>富裕層</b> <span>1億円以上</span></li>
+            <li><b>マス層</b> <span>3,000万円未満／9区分</span></li>
+            <li><b>アッパーマス層</b> <span>3,000万円〜1億円未満／18区分</span></li>
+            <li><b>富裕層</b> <span>1億円以上／16区分</span></li>
           </ul>
         </div>
       </div>
@@ -84,10 +127,66 @@
 </section>
 
 <footer>
-  <p>年齢の区切り（40歳・60歳）は簡易的な目安です。実務では「年齢そのもの」ではなくライフイベント（就職・住宅取得・子の進学・退職・親の相続）を重心として当てはめてください。</p>
+  <p>年齢の区切りは簡易的な目安です。実務では「年齢そのもの」ではなくライフイベント（就職・住宅取得・子の進学・退職・相続）を重心として当てはめてください。</p>
   <p>記載の商品名・制度名は想定されるニーズの整理であり、個別の投資判断・税務判断を推奨するものではありません。実際の提案時は適合性の確認と、税理士・弁護士等の専門家連携を前提としてください。</p>
 </footer>
 
 </div>
+
+<script src="financial-segment-data.js"></script>
+<script>
+const ageInput=document.getElementById("ageInput");
+const hhInput=document.getElementById("hhInput");
+const assetInput=document.getElementById("assetInput");
+
+const blocks={
+  housing: document.getElementById("housingField"),
+  invest: document.getElementById("investField"),
+  childAge: document.getElementById("childAgeField"),
+  origin: document.getElementById("originField"),
+  occupation: document.getElementById("occupationField")
+};
+
+function toggle(key, show){
+  const el=blocks[key];
+  el.hidden=!show;
+  el.querySelectorAll("input,select").forEach(i=>i.disabled=!show);
+}
+
+function updateVisibility(){
+  const age=parseInt(ageInput.value,10);
+  const assets=parseFloat(assetInput.value);
+  const hh=hhInput.value;
+
+  if(!Number.isFinite(age) || !Number.isFinite(assets)){
+    Object.keys(blocks).forEach(k=>toggle(k,false));
+    return;
+  }
+
+  const tier=classifyTier(assets);
+  const notSingle = hh!=="single";
+  const isCouple = hh==="couple";
+
+  if(tier==="wealth"){
+    toggle("occupation", true);
+    toggle("housing", false);
+    toggle("invest", false);
+    toggle("childAge", false);
+    toggle("origin", false);
+    return;
+  }
+  toggle("occupation", false);
+
+  const ageBand=classifyAgeBand(age);
+
+  toggle("housing", tier==="mass" && ageBand==="young" && notSingle);
+  toggle("invest", tier==="mass" && ageBand==="young" && !notSingle);
+  toggle("childAge", tier==="mass" && ageBand==="mid" && notSingle && !isCouple);
+  toggle("origin", tier==="upper" && (ageBand==="mid"||ageBand==="pre") && notSingle);
+}
+
+[ageInput,hhInput,assetInput].forEach(el=>el.addEventListener("input",updateVisibility));
+updateVisibility();
+</script>
 </body>
 </html>

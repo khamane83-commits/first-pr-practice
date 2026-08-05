@@ -21,7 +21,7 @@
 <div id="content"></div>
 
 <footer>
-  <p>年齢の区切り（40歳・60歳）は簡易的な目安です。実務では「年齢そのもの」ではなくライフイベント（就職・住宅取得・子の進学・退職・親の相続）を重心として当てはめてください。</p>
+  <p>年齢の区切りは簡易的な目安です。実務では「年齢そのもの」ではなくライフイベント（就職・住宅取得・子の進学・退職・相続）を重心として当てはめてください。</p>
   <p>記載の商品名・制度名は想定されるニーズの整理であり、個別の投資判断・税務判断を推奨するものではありません。実際の提案時は適合性の確認と、税理士・弁護士等の専門家連携を前提としてください。</p>
 </footer>
 
@@ -31,38 +31,69 @@
 <script>
 const params=new URLSearchParams(window.location.search);
 const age=parseInt(params.get("age"),10);
-const hhKey=params.get("hh");
+const hh=params.get("hh");
 const assets=parseFloat(params.get("assets"));
+const housing=params.get("housing");
+const invest=params.get("invest");
+const childAgeRaw=params.get("childAge");
+const childAge=(childAgeRaw!==null && childAgeRaw!=="") ? parseInt(childAgeRaw,10) : null;
+const origin=params.get("origin");
+const occupation=params.get("occupation");
+
 const content=document.getElementById("content");
 const pageLede=document.getElementById("pageLede");
 
-const valid=Number.isFinite(age)&&age>=0&&Number.isFinite(assets)&&assets>=0&&HHS[hhKey];
+const basicValid = Number.isFinite(age)&&age>=0&&Number.isFinite(assets)&&assets>=0&&HHS[hh];
 
-if(!valid){
+let result=null, d=null;
+if(basicValid){
+  try{
+    result=classify({age,hh,assets,housing,invest,childAge,origin,occupation});
+    d=D[result.id];
+  }catch(e){
+    result=null;
+  }
+}
+
+if(!basicValid || !result || !d){
   pageLede.textContent="入力内容を確認できませんでした。";
   content.innerHTML=`<div class="result-empty">
-    年齢・家族構成・保有金融資産を入力してから診断してください。
+    入力ページから年齢・家族構成・保有金融資産などを入力してから診断してください。
   </div>
   <a class="back-link" href="financial-segment-finder.html">← 入力ページに戻る</a>`;
 }else{
-  const {ageKey,tierKey}=classify(age,assets);
-  const id=ageKey+hhKey+tierKey;
-  const d=D[id];
-  const t=TIERS[tierKey];
+  const t=TIERS[result.tier];
+  const ageLabel = result.tier==="wealth" ? WEALTH_STAGE[result.stage].n : AGES[result.ageBand].n;
 
   document.documentElement.style.setProperty("--accent",t.tint);
   document.documentElement.style.setProperty("--accent-soft",t.soft);
 
-  pageLede.textContent=`${age}歳・${HHS[hhKey].n}・保有金融資産${fmtAsset(assets)}の場合、${AGES[ageKey].n}×${HHS[hhKey].n}×${t.n}の区分に該当します。`;
+  pageLede.textContent=`${age}歳・${HHS[hh].n}・保有金融資産${fmtAsset(assets)}の場合、${ageLabel}×${t.n}の区分（${result.id}）に該当します。`;
+
+  let extraBadge="";
+  if(result.tier==="wealth" && OCC[occupation]){
+    extraBadge=`<div class="badge" style="--tint:${t.tint}"><span class="dot"></span>${OCC[occupation].n}</div>`;
+  }else if(result.tier==="mass" && result.ageBand==="young" && hh!=="single" && HOUSING[housing]){
+    extraBadge=`<div class="badge" style="--tint:${t.tint}"><span class="dot"></span>${HOUSING[housing].n}</div>`;
+  }else if(result.tier==="mass" && result.ageBand==="young" && hh==="single" && INVEST[invest]){
+    extraBadge=`<div class="badge" style="--tint:${t.tint}"><span class="dot"></span>${INVEST[invest].n}</div>`;
+  }else if(result.tier==="mass" && result.ageBand==="mid" && hh!=="single" && hh!=="couple" && childAge!=null){
+    extraBadge=`<div class="badge" style="--tint:${t.tint}"><span class="dot"></span>末子${childAge}歳</div>`;
+  }else if(result.tier==="upper" && ORIGIN[origin]){
+    extraBadge=`<div class="badge" style="--tint:${t.tint}"><span class="dot"></span>${ORIGIN[origin].n}</div>`;
+  }
+
+  const illustration=getIllustration({hh},result);
 
   content.innerHTML=`
     <div class="summary-card">
       <div class="d-portrait" style="--tint-soft:${t.soft}">
-        ${ILL[id]}
+        ${illustration}
         <div class="badges">
-          <div class="badge" style="--tint:${t.tint}"><span class="dot"></span>${age}歳 <span class="arrow">→</span> <b>${AGES[ageKey].n}</b></div>
-          <div class="badge" style="--tint:${t.tint}"><span class="dot"></span>${HHS[hhKey].n}</div>
+          <div class="badge" style="--tint:${t.tint}"><span class="dot"></span>${age}歳 <span class="arrow">→</span> <b>${ageLabel}</b></div>
+          <div class="badge" style="--tint:${t.tint}"><span class="dot"></span>${HHS[hh].n}</div>
           <div class="badge" style="--tint:${t.tint}"><span class="dot"></span>${fmtAsset(assets)} <span class="arrow">→</span> <b>${t.n}</b></div>
+          ${extraBadge}
         </div>
       </div>
     </div>
