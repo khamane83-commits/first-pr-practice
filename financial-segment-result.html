@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>診断結果 — あなたの金融ニーズ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="financial-segment-style.css">
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">診断結果</span>
+  <h1 id="pageTitle">あなたの金融ニーズがわかりました。</h1>
+  <p class="lede" id="pageLede"></p>
+</header>
+
+<div id="content"></div>
+
+<footer>
+  <p>年齢の区切り（40歳・60歳）は簡易的な目安です。実務では「年齢そのもの」ではなくライフイベント（就職・住宅取得・子の進学・退職・親の相続）を重心として当てはめてください。</p>
+  <p>記載の商品名・制度名は想定されるニーズの整理であり、個別の投資判断・税務判断を推奨するものではありません。実際の提案時は適合性の確認と、税理士・弁護士等の専門家連携を前提としてください。</p>
+</footer>
+
+</div>
+
+<script src="financial-segment-data.js"></script>
+<script>
+const params=new URLSearchParams(window.location.search);
+const age=parseInt(params.get("age"),10);
+const hhKey=params.get("hh");
+const assets=parseFloat(params.get("assets"));
+const content=document.getElementById("content");
+const pageLede=document.getElementById("pageLede");
+
+const valid=Number.isFinite(age)&&age>=0&&Number.isFinite(assets)&&assets>=0&&HHS[hhKey];
+
+if(!valid){
+  pageLede.textContent="入力内容を確認できませんでした。";
+  content.innerHTML=`<div class="result-empty">
+    年齢・家族構成・保有金融資産を入力してから診断してください。
+  </div>
+  <a class="back-link" href="financial-segment-finder.html">← 入力ページに戻る</a>`;
+}else{
+  const {ageKey,tierKey}=classify(age,assets);
+  const id=ageKey+hhKey+tierKey;
+  const d=D[id];
+  const t=TIERS[tierKey];
+
+  document.documentElement.style.setProperty("--accent",t.tint);
+  document.documentElement.style.setProperty("--accent-soft",t.soft);
+
+  pageLede.textContent=`${age}歳・${HHS[hhKey].n}・保有金融資産${fmtAsset(assets)}の場合、${AGES[ageKey].n}×${HHS[hhKey].n}×${t.n}の区分に該当します。`;
+
+  content.innerHTML=`
+    <div class="summary-card">
+      <div class="d-portrait" style="--tint-soft:${t.soft}">
+        ${personSVG(hhKey,t.hex)}
+        <div class="badges">
+          <div class="badge" style="--tint:${t.tint}"><span class="dot"></span>${age}歳 <span class="arrow">→</span> <b>${AGES[ageKey].n}</b></div>
+          <div class="badge" style="--tint:${t.tint}"><span class="dot"></span>${HHS[hhKey].n}</div>
+          <div class="badge" style="--tint:${t.tint}"><span class="dot"></span>${fmtAsset(assets)} <span class="arrow">→</span> <b>${t.n}</b></div>
+        </div>
+      </div>
+    </div>
+
+    <section class="result-block" style="--tint:${t.tint};--tint-soft:${t.soft}">
+      <h2 class="result-heading"><span class="mark"></span>あなたの課題はこれです</h2>
+      <div class="issues-card">
+        <ol>${d.issues.map(x=>`<li>${x}</li>`).join("")}</ol>
+      </div>
+    </section>
+
+    <section class="result-block" style="--tint:${t.tint}">
+      <h2 class="result-heading"><span class="mark"></span>検討すべき金融サービスは以下です</h2>
+      <div class="needs">${CAT.map(([k,n])=>
+        `<div class="need"><h5>${n}</h5><ul>${d[k].map(x=>`<li>${x}</li>`).join("")}</ul></div>`).join("")}</div>
+    </section>
+
+    <a class="back-link" href="financial-segment-finder.html">← 条件を変えてもう一度診断する</a>
+  `;
+}
+</script>
+</body>
+</html>
