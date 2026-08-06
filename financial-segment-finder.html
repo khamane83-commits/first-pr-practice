@@ -25,23 +25,24 @@
       <div class="field">
         <label for="ageInput">年齢</label>
         <div class="inputwrap">
-          <input type="number" id="ageInput" name="age" min="0" max="110" step="1" value="43" inputmode="numeric" required>
+          <input type="number" id="ageInput" name="age" min="0" max="110" step="1" placeholder="例：43" inputmode="numeric" required>
           <span class="unit">歳</span>
         </div>
       </div>
       <div class="field">
         <label for="hhInput">家族構成</label>
-        <select id="hhInput" name="hh">
+        <select id="hhInput" name="hh" required>
+          <option value="" selected disabled hidden>選択してください</option>
           <option value="single">単身世帯</option>
           <option value="couple">夫婦世帯</option>
-          <option value="family" selected>ファミリー世帯（未成年の子と同居）</option>
+          <option value="family">ファミリー世帯（未成年の子と同居）</option>
           <option value="withchild">子と同居（成人した子と同居）</option>
         </select>
       </div>
       <div class="field">
         <label for="assetInput">保有金融資産</label>
         <div class="inputwrap">
-          <input type="number" id="assetInput" name="assets" min="0" step="10" value="600" inputmode="numeric" required>
+          <input type="number" id="assetInput" name="assets" min="0" step="10" placeholder="例：600" inputmode="numeric" required>
           <span class="unit">万円</span>
         </div>
         <span class="hint">預金・株式・投信・保険解約返戻金などの合計（不動産を除く）</span>
@@ -51,14 +52,16 @@
     <div class="form-grid cond-grid" id="condGrid">
       <div class="field cond-field" id="housingField" hidden>
         <label for="housingInput">住居形態</label>
-        <select id="housingInput" name="housing" disabled>
+        <select id="housingInput" name="housing" disabled required>
+          <option value="" selected disabled hidden>選択してください</option>
           <option value="rent">賃貸</option>
           <option value="own">持家</option>
         </select>
       </div>
       <div class="field cond-field" id="investField" hidden>
         <label for="investInput">資産の運用状況</label>
-        <select id="investInput" name="invest" disabled>
+        <select id="investInput" name="invest" disabled required>
+          <option value="" selected disabled hidden>選択してください</option>
           <option value="none">預金・現金が中心</option>
           <option value="started">投資信託・株式などを運用中</option>
         </select>
@@ -66,20 +69,22 @@
       <div class="field cond-field" id="childAgeField" hidden>
         <label for="childAgeInput">末子の年齢</label>
         <div class="inputwrap">
-          <input type="number" id="childAgeInput" name="childAge" min="0" max="22" step="1" value="10" inputmode="numeric" disabled>
+          <input type="number" id="childAgeInput" name="childAge" min="0" max="22" step="1" placeholder="例：10" inputmode="numeric" disabled>
           <span class="unit">歳</span>
         </div>
       </div>
       <div class="field cond-field" id="originField" hidden>
         <label for="originInput">資産の主な形成方法</label>
-        <select id="originInput" name="origin" disabled>
+        <select id="originInput" name="origin" disabled required>
+          <option value="" selected disabled hidden>選択してください</option>
           <option value="self">自力形成（収入からの積立・運用）</option>
           <option value="inherit">相続・贈与による取得</option>
         </select>
       </div>
       <div class="field cond-field" id="occupationField" hidden>
         <label for="occupationInput">職業・資産形成タイプ</label>
-        <select id="occupationInput" name="occupation" disabled>
+        <select id="occupationInput" name="occupation" disabled required>
+          <option value="" selected disabled hidden>選択してください</option>
           <option value="owner">事業オーナー（現役）</option>
           <option value="retiredOwner">引退オーナー（事業売却・譲渡済み）</option>
           <option value="pro">給与所得者・専門職（勤務医・役員など）</option>
@@ -158,7 +163,7 @@ function updateVisibility(){
   const assets=parseFloat(assetInput.value);
   const hh=hhInput.value;
 
-  if(!Number.isFinite(age) || !Number.isFinite(assets)){
+  if(!Number.isFinite(age) || !Number.isFinite(assets) || !hh){
     Object.keys(blocks).forEach(k=>toggle(k,false));
     return;
   }
